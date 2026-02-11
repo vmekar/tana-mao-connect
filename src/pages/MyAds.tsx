@@ -157,9 +157,11 @@ const MyAds = () => {
                   </div>
 
                   <div className="flex gap-2 mt-auto pt-4 border-t">
-                    <Button variant="outline" size="sm" className="flex-1" disabled>
-                      <Pencil className="w-4 h-4 mr-2" />
-                      Editar
+                    <Button variant="outline" size="sm" className="flex-1" asChild>
+                      <Link to={`/listing/edit/${listing.id}`}>
+                        <Pencil className="w-4 h-4 mr-2" />
+                        Editar
+                      </Link>
                     </Button>
 
                     <AlertDialog>

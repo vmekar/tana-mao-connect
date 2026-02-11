@@ -26,6 +26,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/listing/:id" element={<ListingDetails />} />
             <Route path="/anunciar" element={<CreateListing />} />
+            <Route path="/listing/edit/:id" element={<CreateListing />} />
             <Route path="/search" element={<Search />} />
             <Route path="/my-ads" element={<MyAds />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

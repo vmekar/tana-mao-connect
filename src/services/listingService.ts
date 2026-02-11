@@ -248,4 +248,45 @@ export const listingService = {
       updatedAt: item.updated_at,
     };
   },
+
+  async updateListing(id: string, listing: CreateListingDTO): Promise<Listing> {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) throw new Error('User not authenticated');
+
+    const { data, error } = await supabase
+      .from('listings')
+      .update({
+        title: listing.title,
+        description: listing.description,
+        price: listing.price,
+        category: listing.category,
+        location: listing.location,
+        images: listing.images,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .eq('user_id', user.id) // Ensure user owns the listing
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    const item = data as unknown as ListingRow;
+
+    return {
+      id: item.id,
+      title: item.title,
+      description: item.description || undefined,
+      price: item.price,
+      category: item.category,
+      location: item.location,
+      images: item.images || [],
+      userId: item.user_id,
+      status: item.status as ListingStatus,
+      isFeatured: item.is_featured,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
+    };
+  },
 };

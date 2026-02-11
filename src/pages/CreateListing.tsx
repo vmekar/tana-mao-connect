@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { listingService } from "@/services/listingService";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus, X } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 // Form Schema
 const formSchema = z.object({
@@ -52,13 +53,23 @@ const CATEGORIES = [
   "Serviços",
 ];
 
+interface ImageItem {
+  url: string;
+  file?: File;
+}
+
 const CreateListing = () => {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  // Store both the file object (for upload) and the URL (for preview)
-  const [files, setFiles] = useState<File[]>([]);
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [isFetching, setIsFetching] = useState(!!id);
+
+  // Manage images: both existing URLs and new Files
+  const [images, setImages] = useState<ImageItem[]>([]);
+
+  const isEditing = !!id;
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -67,42 +78,109 @@ const CreateListing = () => {
       description: "",
       price: 0,
       location: "",
+      category: "",
     },
   });
+
+  useEffect(() => {
+    const fetchListing = async () => {
+      if (!id) return;
+
+      try {
+        const listing = await listingService.fetchDetails(id);
+
+        if (!listing) {
+          toast({
+            variant: "destructive",
+            title: "Erro",
+            description: "Anúncio não encontrado.",
+          });
+          navigate("/my-ads");
+          return;
+        }
+
+        // Verify ownership
+        if (user && listing.userId !== user.id) {
+           toast({
+            variant: "destructive",
+            title: "Acesso Negado",
+            description: "Você não tem permissão para editar este anúncio.",
+          });
+          navigate("/");
+          return;
+        }
+
+        // Populate form
+        form.reset({
+          title: listing.title,
+          description: listing.description || "",
+          price: listing.price,
+          category: listing.category,
+          location: listing.location,
+        });
+
+        // Populate images
+        setImages(listing.images.map(url => ({ url })));
+
+      } catch (error) {
+        console.error("Failed to fetch listing", error);
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Não foi possível carregar o anúncio.",
+        });
+      } finally {
+        setIsFetching(false);
+      }
+    };
+
+    fetchListing();
+  }, [id, form, navigate, toast, user]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      const uploadedImageUrls: string[] = [];
+      const finalImageUrls: string[] = [];
 
-      // Upload images first
-      for (const file of files) {
-        const url = await listingService.uploadListingImage(file);
-        uploadedImageUrls.push(url);
+      // Process images
+      for (const img of images) {
+        if (img.file) {
+          // Upload new file
+          const url = await listingService.uploadListingImage(img.file);
+          finalImageUrls.push(url);
+        } else {
+          // Keep existing URL
+          finalImageUrls.push(img.url);
+        }
       }
 
-      // If no images were uploaded, we might want to prevent submission or use a placeholder.
-      // For now, let's proceed even without images, or add validation.
-      // Ideally, the UI should enforce at least one image if required.
-
-      await listingService.createListing({
+      const listingData = {
         ...values,
-        images: uploadedImageUrls,
-      });
+        images: finalImageUrls,
+      };
 
-      toast({
-        title: "Sucesso!",
-        description: "Seu anúncio foi criado com sucesso.",
-      });
+      if (isEditing && id) {
+        await listingService.updateListing(id, listingData);
+        toast({
+          title: "Sucesso!",
+          description: "Seu anúncio foi atualizado.",
+        });
+      } else {
+        await listingService.createListing(listingData);
+        toast({
+          title: "Sucesso!",
+          description: "Seu anúncio foi criado com sucesso.",
+        });
+      }
 
       // Redirect to home or user listings
-      navigate("/");
+      navigate("/my-ads");
     } catch (error) {
       console.error(error);
       toast({
         variant: "destructive",
         title: "Erro",
-        description: "Ocorreu um erro ao criar o anúncio. Verifique se você está logado.",
+        description: `Ocorreu um erro ao ${isEditing ? 'atualizar' : 'criar'} o anúncio.`,
       });
     } finally {
       setIsLoading(false);
@@ -115,22 +193,36 @@ const CreateListing = () => {
       const file = newFiles[0];
       const previewUrl = URL.createObjectURL(file);
 
-      setFiles([...files, file]);
-      setPreviewUrls([...previewUrls, previewUrl]);
+      setImages([...images, { url: previewUrl, file }]);
     }
+    // Reset input
+    e.target.value = '';
   };
 
   const removeImage = (index: number) => {
-    setFiles(files.filter((_, i) => i !== index));
-    setPreviewUrls(previewUrls.filter((_, i) => i !== index));
+    setImages(images.filter((_, i) => i !== index));
   };
+
+  if (isFetching) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-muted/10">
       <Header />
 
       <main className="flex-1 container mx-auto px-4 py-8 max-w-3xl">
-        <h1 className="text-3xl font-bold mb-8 text-center">Criar Anúncio</h1>
+        <h1 className="text-3xl font-bold mb-8 text-center">
+          {isEditing ? "Editar Anúncio" : "Criar Anúncio"}
+        </h1>
 
         <div className="bg-background p-8 rounded-xl shadow-sm border">
           <Form {...form}>
@@ -215,9 +307,9 @@ const CreateListing = () => {
               <div className="space-y-4">
                 <FormLabel>Fotos do Produto</FormLabel>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {previewUrls.map((url, index) => (
+                  {images.map((img, index) => (
                     <div key={index} className="relative aspect-square rounded-lg overflow-hidden border bg-muted group">
-                      <img src={url} alt={`Preview ${index}`} className="w-full h-full object-cover" />
+                      <img src={img.url} alt={`Preview ${index}`} className="w-full h-full object-cover" />
                       <button
                         type="button"
                         onClick={() => removeImage(index)}
@@ -229,7 +321,7 @@ const CreateListing = () => {
                     </div>
                   ))}
 
-                  {previewUrls.length < 5 && (
+                  {images.length < 5 && (
                     <div className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 transition-colors flex flex-col items-center justify-center cursor-pointer bg-muted/5 relative">
                       <input
                         type="file"
@@ -268,10 +360,10 @@ const CreateListing = () => {
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Publicando...
+                      {isEditing ? "Salvar Alterações" : "Publicar Anúncio"}
                     </>
                   ) : (
-                    "Publicar Anúncio"
+                    isEditing ? "Salvar Alterações" : "Publicar Anúncio"
                   )}
                 </Button>
               </div>
