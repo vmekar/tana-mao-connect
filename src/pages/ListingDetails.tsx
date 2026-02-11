@@ -1,28 +1,41 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { listingService } from "@/services/listingService";
+import { messageService, Profile } from "@/services/messageService";
 import { Listing } from "@/types/listing";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Clock, MessageCircle, Share2, ArrowLeft } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { MapPin, Clock, MessageCircle, Share2, ArrowLeft, Phone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const ListingDetails = () => {
   const { id } = useParams<{ id: string }>();
   const [listing, setListing] = useState<Listing | null>(null);
+  const [sellerProfile, setSellerProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [messageContent, setMessageContent] = useState("");
+  const [sendingMessage, setSendingMessage] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
-    const fetchListing = async () => {
+    const fetchListingAndSeller = async () => {
       if (!id) return;
       try {
-        const data = await listingService.fetchDetails(id);
-        setListing(data);
+        const listingData = await listingService.fetchDetails(id);
+        setListing(listingData);
+
+        if (listingData) {
+          const profileData = await messageService.fetchSellerProfile(listingData.userId);
+          setSellerProfile(profileData);
+        }
       } catch (error) {
-        console.error("Failed to fetch listing", error);
+        console.error("Failed to fetch listing or seller", error);
         toast({
           variant: "destructive",
           title: "Erro",
@@ -33,8 +46,47 @@ const ListingDetails = () => {
       }
     };
 
-    fetchListing();
+    fetchListingAndSeller();
   }, [id, toast]);
+
+  const handleSendMessage = async () => {
+    if (!user) {
+      toast({
+        title: "Atenção",
+        description: "Você precisa estar logado para enviar mensagens.",
+      });
+      return;
+    }
+
+    if (!listing || !messageContent.trim()) return;
+
+    setSendingMessage(true);
+    try {
+      await messageService.sendMessage(listing.id, listing.userId, messageContent);
+      toast({
+        title: "Sucesso!",
+        description: "Mensagem enviada com sucesso.",
+      });
+      setMessageContent("");
+    } catch (error) {
+      console.error("Failed to send message", error);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Falha ao enviar mensagem.",
+      });
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
+  const handleWhatsAppClick = () => {
+    if (sellerProfile?.phone) {
+      const message = `Olá! Vi seu anúncio "${listing?.title}" no TanaMão e gostaria de saber mais.`;
+      const url = `https://wa.me/${sellerProfile.phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+      window.open(url, '_blank');
+    }
+  };
 
   if (loading) {
     return (
@@ -63,6 +115,8 @@ const ListingDetails = () => {
     );
   }
 
+  const isOwner = user?.id === listing.userId;
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -82,7 +136,7 @@ const ListingDetails = () => {
               {/* Image Gallery */}
               <div className="bg-background rounded-xl overflow-hidden shadow-sm border aspect-video relative">
                 <img
-                  src={listing.images[0]}
+                  src={listing.images[0] || "/placeholder.svg"}
                   alt={listing.title}
                   className="w-full h-full object-cover"
                 />
@@ -102,7 +156,7 @@ const ListingDetails = () => {
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
-                    <span>Publicado há 2 horas</span>
+                    <span>Publicado em {new Date(listing.createdAt).toLocaleDateString()}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <MapPin className="w-4 h-4" />
@@ -129,10 +183,28 @@ const ListingDetails = () => {
                   </div>
                   <div>
                     <span className="text-muted-foreground">Condição</span>
-                    <p className="font-medium">Usado - Como novo</p>
+                    <p className="font-medium">Usado - Bom estado</p>
                   </div>
                 </div>
               </div>
+
+              {/* Message Form (Desktop) */}
+              {!isOwner && (
+                <div className="hidden lg:block bg-background p-6 rounded-xl shadow-sm border">
+                  <h3 className="font-semibold mb-4">Enviar mensagem ao vendedor</h3>
+                  <div className="space-y-4">
+                    <Textarea
+                      placeholder="Olá, tenho interesse neste produto..."
+                      rows={4}
+                      value={messageContent}
+                      onChange={(e) => setMessageContent(e.target.value)}
+                    />
+                    <Button onClick={handleSendMessage} disabled={sendingMessage}>
+                      {sendingMessage ? "Enviando..." : "Enviar Mensagem"}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Sidebar */}
@@ -156,10 +228,29 @@ const ListingDetails = () => {
                 </div>
 
                 <div className="flex flex-col gap-3">
-                  <Button size="lg" className="w-full text-lg gap-2">
-                    <MessageCircle className="w-5 h-5" />
-                    Chat com Vendedor
-                  </Button>
+                  {isOwner ? (
+                    <Button asChild className="w-full text-lg gap-2" variant="secondary">
+                       <Link to={`/listing/edit/${listing.id}`}>Editar Anúncio</Link>
+                    </Button>
+                  ) : (
+                    <>
+                      {sellerProfile?.phone && (
+                        <Button
+                          size="lg"
+                          className="w-full text-lg gap-2 bg-green-600 hover:bg-green-700 text-white"
+                          onClick={handleWhatsAppClick}
+                        >
+                          <Phone className="w-5 h-5" />
+                          Chat no WhatsApp
+                        </Button>
+                      )}
+                      <Button size="lg" className="w-full text-lg gap-2" onClick={() => document.querySelector('textarea')?.focus()}>
+                        <MessageCircle className="w-5 h-5" />
+                        Enviar Mensagem
+                      </Button>
+                    </>
+                  )}
+
                   <Button variant="outline" size="lg" className="w-full gap-2">
                     <Share2 className="w-5 h-5" />
                     Compartilhar
@@ -171,11 +262,15 @@ const ListingDetails = () => {
               <div className="bg-background p-6 rounded-xl shadow-sm border">
                 <h3 className="font-semibold mb-4">Informações do Vendedor</h3>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl">
-                    U
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl overflow-hidden">
+                    {sellerProfile?.avatar_url ? (
+                        <img src={sellerProfile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                        <span>{sellerProfile?.full_name?.charAt(0).toUpperCase() || "U"}</span>
+                    )}
                   </div>
                   <div>
-                    <p className="font-medium">Usuário Vendedor</p>
+                    <p className="font-medium">{sellerProfile?.full_name || "Usuário Vendedor"}</p>
                     <p className="text-xs text-muted-foreground">Na plataforma desde 2023</p>
                   </div>
                 </div>
@@ -193,6 +288,24 @@ const ListingDetails = () => {
                   <li>Verifique o produto antes de pagar.</li>
                 </ul>
               </div>
+
+              {/* Mobile Message Form */}
+              {!isOwner && (
+                <div className="lg:hidden bg-background p-6 rounded-xl shadow-sm border">
+                  <h3 className="font-semibold mb-4">Enviar mensagem ao vendedor</h3>
+                  <div className="space-y-4">
+                    <Textarea
+                      placeholder="Olá, tenho interesse neste produto..."
+                      rows={4}
+                      value={messageContent}
+                      onChange={(e) => setMessageContent(e.target.value)}
+                    />
+                    <Button onClick={handleSendMessage} disabled={sendingMessage} className="w-full">
+                      {sendingMessage ? "Enviando..." : "Enviar Mensagem"}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
