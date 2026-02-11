@@ -23,3 +23,11 @@ export interface CreateListingDTO {
   location: string;
   images: string[];
 }
+
+export interface SearchFilters {
+  query?: string;
+  category?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  location?: string;
+}

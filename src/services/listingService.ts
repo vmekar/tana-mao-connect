@@ -1,4 +1,4 @@
-import { CreateListingDTO, Listing, ListingStatus } from "@/types/listing";
+import { CreateListingDTO, Listing, ListingStatus, SearchFilters } from "@/types/listing";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ListingRow {
@@ -76,6 +76,57 @@ export const listingService = {
       createdAt: item.created_at,
       updatedAt: item.updated_at,
     };
+  },
+
+  async searchListings(filters: SearchFilters): Promise<Listing[]> {
+    let query = supabase
+      .from('listings')
+      .select('*')
+      .eq('status', 'active')
+      .order('created_at', { ascending: false });
+
+    if (filters.query) {
+      query = query.ilike('title', `%${filters.query}%`);
+    }
+
+    if (filters.category) {
+      query = query.eq('category', filters.category);
+    }
+
+    if (filters.location) {
+      query = query.ilike('location', `%${filters.location}%`);
+    }
+
+    if (filters.minPrice !== undefined) {
+      query = query.gte('price', filters.minPrice);
+    }
+
+    if (filters.maxPrice !== undefined) {
+      query = query.lte('price', filters.maxPrice);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Error searching listings:', error);
+      throw error;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (data as any[]).map((item: ListingRow) => ({
+      id: item.id,
+      title: item.title,
+      description: item.description || undefined,
+      price: item.price,
+      category: item.category,
+      location: item.location,
+      images: item.images || [],
+      userId: item.user_id,
+      status: item.status as ListingStatus,
+      isFeatured: item.is_featured,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
+    }));
   },
 
   async uploadListingImage(file: File): Promise<string> {
