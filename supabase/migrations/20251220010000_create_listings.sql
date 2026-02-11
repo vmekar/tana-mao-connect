@@ -1,53 +1,35 @@
--- Create listings table
-CREATE TABLE public.listings (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    title TEXT NOT NULL,
-    description TEXT,
-    price NUMERIC NOT NULL,
-    category TEXT NOT NULL,
-    location TEXT NOT NULL,
-    images TEXT[] DEFAULT '{}',
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-    status TEXT DEFAULT 'active' CHECK (status IN ('active', 'sold', 'expired')),
-    is_featured BOOLEAN DEFAULT false,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
+create table if not exists listings (
+  id uuid default gen_random_uuid() primary key,
+  title text not null,
+  description text,
+  price numeric not null,
+  category text not null,
+  location text not null,
+  images text[] default array[]::text[],
+  user_id uuid references auth.users(id) on delete cascade not null,
+  status text check (status in ('active', 'sold', 'expired')) default 'active',
+  is_featured boolean default false,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
 -- Enable RLS
-ALTER TABLE public.listings ENABLE ROW LEVEL SECURITY;
+alter table listings enable row level security;
 
--- Listings policies
+-- Policies
+create policy "Public listings are viewable by everyone"
+  on listings for select
+  using ( true );
 
--- Everyone can view active listings
-CREATE POLICY "Public listings are viewable by everyone"
-ON public.listings FOR SELECT
-USING (status = 'active');
+create policy "Users can insert their own listings"
+  on listings for insert
+  with check ( auth.uid() = user_id );
 
--- Users can insert their own listings
-CREATE POLICY "Users can insert their own listings"
-ON public.listings FOR INSERT
-WITH CHECK (auth.uid() = user_id);
+create policy "Users can update their own listings"
+  on listings for update
+  using ( auth.uid() = user_id );
 
--- Users can update their own listings
-CREATE POLICY "Users can update their own listings"
-ON public.listings FOR UPDATE
-USING (auth.uid() = user_id);
-
--- Users can delete their own listings
-CREATE POLICY "Users can delete their own listings"
-ON public.listings FOR DELETE
-USING (auth.uid() = user_id);
-
--- Trigger for updating timestamp
-CREATE TRIGGER update_listings_updated_at
-    BEFORE UPDATE ON public.listings
-    FOR EACH ROW
-    EXECUTE FUNCTION public.update_updated_at_column();
-
--- Create index for search performance
-CREATE INDEX listings_title_idx ON public.listings USING GIN (to_tsvector('portuguese', title));
-CREATE INDEX listings_description_idx ON public.listings USING GIN (to_tsvector('portuguese', description));
-CREATE INDEX listings_category_idx ON public.listings (category);
-CREATE INDEX listings_location_idx ON public.listings (location);
-CREATE INDEX listings_price_idx ON public.listings (price);
+-- Indexes
+create index listings_user_id_idx on listings (user_id);
+create index listings_category_idx on listings (category);
+create index listings_created_at_idx on listings (created_at desc);

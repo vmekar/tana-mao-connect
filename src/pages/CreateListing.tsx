@@ -56,7 +56,9 @@ const CreateListing = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [images, setImages] = useState<string[]>([]);
+  // Store both the file object (for upload) and the URL (for preview)
+  const [files, setFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -71,12 +73,21 @@ const CreateListing = () => {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      // Add mock image if none provided
-      const finalImages = images.length > 0 ? images : ["https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&q=80"];
+      const uploadedImageUrls: string[] = [];
+
+      // Upload images first
+      for (const file of files) {
+        const url = await listingService.uploadListingImage(file);
+        uploadedImageUrls.push(url);
+      }
+
+      // If no images were uploaded, we might want to prevent submission or use a placeholder.
+      // For now, let's proceed even without images, or add validation.
+      // Ideally, the UI should enforce at least one image if required.
 
       await listingService.createListing({
         ...values,
-        images: finalImages,
+        images: uploadedImageUrls,
       });
 
       toast({
@@ -91,7 +102,7 @@ const CreateListing = () => {
       toast({
         variant: "destructive",
         title: "Erro",
-        description: "Ocorreu um erro ao criar o anúncio.",
+        description: "Ocorreu um erro ao criar o anúncio. Verifique se você está logado.",
       });
     } finally {
       setIsLoading(false);
@@ -99,16 +110,19 @@ const CreateListing = () => {
   }
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Mock image upload - in real app, this would upload to Supabase Storage
-    const file = e.target.files?.[0];
-    if (file) {
-      const fakeUrl = URL.createObjectURL(file);
-      setImages([...images, fakeUrl]);
+    const newFiles = e.target.files;
+    if (newFiles && newFiles.length > 0) {
+      const file = newFiles[0];
+      const previewUrl = URL.createObjectURL(file);
+
+      setFiles([...files, file]);
+      setPreviewUrls([...previewUrls, previewUrl]);
     }
   };
 
   const removeImage = (index: number) => {
-    setImages(images.filter((_, i) => i !== index));
+    setFiles(files.filter((_, i) => i !== index));
+    setPreviewUrls(previewUrls.filter((_, i) => i !== index));
   };
 
   return (
@@ -201,26 +215,28 @@ const CreateListing = () => {
               <div className="space-y-4">
                 <FormLabel>Fotos do Produto</FormLabel>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {images.map((img, index) => (
+                  {previewUrls.map((url, index) => (
                     <div key={index} className="relative aspect-square rounded-lg overflow-hidden border bg-muted group">
-                      <img src={img} alt={`Preview ${index}`} className="w-full h-full object-cover" />
+                      <img src={url} alt={`Preview ${index}`} className="w-full h-full object-cover" />
                       <button
                         type="button"
                         onClick={() => removeImage(index)}
                         className="absolute top-1 right-1 bg-destructive text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Remover imagem"
                       >
                         <X className="w-4 h-4" />
                       </button>
                     </div>
                   ))}
 
-                  {images.length < 5 && (
+                  {previewUrls.length < 5 && (
                     <div className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 transition-colors flex flex-col items-center justify-center cursor-pointer bg-muted/5 relative">
                       <input
                         type="file"
                         accept="image/*"
                         className="absolute inset-0 opacity-0 cursor-pointer"
                         onChange={handleImageUpload}
+                        disabled={isLoading}
                       />
                       <Plus className="w-8 h-8 text-muted-foreground mb-2" />
                       <span className="text-xs text-muted-foreground">Adicionar Foto</span>
@@ -245,7 +261,7 @@ const CreateListing = () => {
               />
 
               <div className="flex justify-end gap-4 pt-4">
-                <Button type="button" variant="outline" onClick={() => navigate(-1)}>
+                <Button type="button" variant="outline" onClick={() => navigate(-1)} disabled={isLoading}>
                   Cancelar
                 </Button>
                 <Button type="submit" disabled={isLoading} className="min-w-[150px]">
