@@ -80,8 +80,8 @@ export const Header = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
                 
-                <Button variant="default" className="hidden md:flex">
-                  Anunciar Grátis
+                <Button variant="default" className="hidden md:flex" asChild>
+                  <Link to="/anunciar">Anunciar Grátis</Link>
                 </Button>
               </>
             ) : (
