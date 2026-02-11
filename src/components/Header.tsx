@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, User, Menu, LogOut } from "lucide-react";
+import { Heart, MessageCircle, User, Menu, LogOut, List } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
   DropdownMenu,
@@ -38,7 +38,7 @@ export const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
-            <Button variant="ghost">Categorias</Button>
+            <Button variant="ghost" asChild><Link to="/search">Categorias</Link></Button>
             <Button variant="ghost">Como Funciona</Button>
             <Button variant="ghost">Ajuda</Button>
           </nav>
@@ -65,6 +65,12 @@ export const Header = () => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem className="flex items-center gap-2" asChild>
+                      <Link to="/my-ads">
+                        <List className="h-4 w-4" />
+                        Meus Anúncios
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem className="flex items-center gap-2">
                       <User className="h-4 w-4" />
                       Meu Perfil

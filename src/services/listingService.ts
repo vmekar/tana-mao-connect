@@ -129,6 +129,35 @@ export const listingService = {
     }));
   },
 
+  async fetchUserListings(userId: string): Promise<Listing[]> {
+    const { data, error } = await supabase
+      .from('listings')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching user listings:', error);
+      throw error;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (data as any[]).map((item: ListingRow) => ({
+      id: item.id,
+      title: item.title,
+      description: item.description || undefined,
+      price: item.price,
+      category: item.category,
+      location: item.location,
+      images: item.images || [],
+      userId: item.user_id,
+      status: item.status as ListingStatus,
+      isFeatured: item.is_featured,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
+    }));
+  },
+
   async uploadListingImage(file: File): Promise<string> {
     const fileExt = file.name.split('.').pop();
     const fileName = `${crypto.randomUUID()}.${fileExt}`;
@@ -147,6 +176,38 @@ export const listingService = {
       .getPublicUrl(filePath);
 
     return data.publicUrl;
+  },
+
+  async deleteListing(id: string, imageUrls: string[]): Promise<void> {
+    // Delete images from storage first
+    if (imageUrls && imageUrls.length > 0) {
+      const paths = imageUrls.map((url) => {
+        const urlObj = new URL(url);
+        // Path is typically /storage/v1/object/public/listing-images/<filename>
+        const pathParts = urlObj.pathname.split('/');
+        return pathParts[pathParts.length - 1]; // filename
+      });
+
+      const { error: storageError } = await supabase.storage
+        .from('listing-images')
+        .remove(paths);
+
+      if (storageError) {
+        console.error('Error deleting images:', storageError);
+        // Continue to delete listing even if image deletion fails,
+        // though ideally we'd want to handle this better.
+      }
+    }
+
+    const { error } = await supabase
+      .from('listings')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting listing:', error);
+      throw error;
+    }
   },
 
   async createListing(listing: CreateListingDTO): Promise<Listing> {
