@@ -13,6 +13,7 @@ import Search from "./pages/Search";
 import MyAds from "./pages/MyAds";
 import Profile from "./pages/Profile";
 import Inbox from "./pages/Inbox";
+import Favorites from "./pages/Favorites";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/my-ads" element={<MyAds />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/inbox" element={<Inbox />} />
+            <Route path="/favorites" element={<Favorites />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

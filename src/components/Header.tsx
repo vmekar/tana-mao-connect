@@ -47,8 +47,10 @@ export const Header = () => {
           <div className="flex items-center gap-2">
             {user ? (
               <>
-                <Button variant="ghost" size="icon" className="hidden md:flex">
-                  <Heart className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="hidden md:flex" asChild>
+                  <Link to="/favorites">
+                    <Heart className="h-5 w-5" />
+                  </Link>
                 </Button>
                 <Button variant="ghost" size="icon" className="hidden md:flex" asChild>
                   <Link to="/inbox">
@@ -77,6 +79,12 @@ export const Header = () => {
                        <Link to="/inbox">
                         <MessageCircle className="h-4 w-4" />
                         Mensagens
+                      </Link>
+                    </DropdownMenuItem>
+                     <DropdownMenuItem className="flex items-center gap-2" asChild>
+                      <Link to="/favorites">
+                        <Heart className="h-4 w-4" />
+                        Meus Favoritos
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem className="flex items-center gap-2" asChild>
