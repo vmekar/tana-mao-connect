@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Clock } from "lucide-react";
@@ -13,6 +14,7 @@ interface ListingCardProps {
 }
 
 export const ListingCard = ({ 
+  id,
   title, 
   price, 
   image, 
@@ -21,6 +23,7 @@ export const ListingCard = ({
   isFeatured 
 }: ListingCardProps) => {
   return (
+    <Link to={`/listing/${id}`}>
     <Card className="group cursor-pointer overflow-hidden hover:shadow-elevated transition-all duration-300 hover:scale-[1.02]">
       {/* Image */}
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
@@ -58,5 +61,6 @@ export const ListingCard = ({
         </div>
       </div>
     </Card>
+    </Link>
   );
 };
