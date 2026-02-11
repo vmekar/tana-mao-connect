@@ -11,6 +11,8 @@ import ListingDetails from "./pages/ListingDetails";
 import CreateListing from "./pages/CreateListing";
 import Search from "./pages/Search";
 import MyAds from "./pages/MyAds";
+import Profile from "./pages/Profile";
+import Inbox from "./pages/Inbox";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +31,8 @@ const App = () => (
             <Route path="/listing/edit/:id" element={<CreateListing />} />
             <Route path="/search" element={<Search />} />
             <Route path="/my-ads" element={<MyAds />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/inbox" element={<Inbox />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

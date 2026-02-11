@@ -50,8 +50,10 @@ export const Header = () => {
                 <Button variant="ghost" size="icon" className="hidden md:flex">
                   <Heart className="h-5 w-5" />
                 </Button>
-                <Button variant="ghost" size="icon" className="hidden md:flex">
-                  <MessageCircle className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="hidden md:flex" asChild>
+                  <Link to="/inbox">
+                    <MessageCircle className="h-5 w-5" />
+                  </Link>
                 </Button>
                 
                 <DropdownMenu>
@@ -71,9 +73,17 @@ export const Header = () => {
                         Meus Anúncios
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      Meu Perfil
+                    <DropdownMenuItem className="flex items-center gap-2" asChild>
+                       <Link to="/inbox">
+                        <MessageCircle className="h-4 w-4" />
+                        Mensagens
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="flex items-center gap-2" asChild>
+                      <Link to="/profile">
+                        <User className="h-4 w-4" />
+                        Meu Perfil
+                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem 
