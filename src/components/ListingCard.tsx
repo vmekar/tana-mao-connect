@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { MapPin } from "lucide-react";
 import { FavoriteButton } from "@/components/FavoriteButton";

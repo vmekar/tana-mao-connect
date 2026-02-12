@@ -7,12 +7,11 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { MapPin, Clock, MessageCircle, Share2, ArrowLeft, Phone, Heart } from "lucide-react";
+import { MapPin, Clock, MessageCircle, Share2, ArrowLeft, Phone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { useFavorites } from "@/hooks/useFavorites";
+import { FavoriteButton } from "@/components/FavoriteButton";
 
 const ListingDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,7 +22,6 @@ const ListingDetails = () => {
   const [sendingMessage, setSendingMessage] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
-  const { isFavorite, toggleFavorite } = useFavorites();
 
   useEffect(() => {
     const fetchListingAndSeller = async () => {
@@ -118,7 +116,6 @@ const ListingDetails = () => {
   }
 
   const isOwner = user?.id === listing.userId;
-  const favorited = isFavorite(listing.id);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -132,15 +129,12 @@ const ListingDetails = () => {
               Voltar
             </Link>
 
-            <Button
+            {/* Favorite Button */}
+            <FavoriteButton
+              listingId={listing.id}
               variant="outline"
-              size="sm"
-              className={`gap-2 ${favorited ? 'text-red-500 border-red-200 bg-red-50' : ''}`}
-              onClick={() => toggleFavorite(listing.id)}
-            >
-              <Heart className={`w-4 h-4 ${favorited ? 'fill-current' : ''}`} />
-              {favorited ? 'Salvo' : 'Salvar'}
-            </Button>
+              className="gap-2 border-red-200"
+            />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
