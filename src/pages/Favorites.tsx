@@ -1,72 +1,85 @@
-import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { favoriteService } from "@/services/favoriteService";
+import { Listing } from "@/types/listing";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { Listing } from "@/types/listing";
-import { listingService } from "@/services/listingService";
 import { ListingCard } from "@/components/ListingCard";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { Heart } from "lucide-react";
+import { useEffect, useState } from "react";
 
 const Favorites = () => {
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [favorites, setFavorites] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/auth");
+      return;
+    }
+
     const fetchFavorites = async () => {
+      if (!user) return;
+
+      setLoading(true);
       try {
-        const data = await listingService.getFavorites();
+        const data = await favoriteService.fetchFavoriteListings(user.id);
         setFavorites(data);
       } catch (error) {
-        console.error("Failed to fetch favorites:", error);
+        console.error("Failed to fetch favorites", error);
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Não foi possível carregar seus favoritos.",
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchFavorites();
-  }, []);
+  }, [user, authLoading, navigate, toast]);
 
-  const getTimeAgo = (date: Date) => {
-    const diff = new Date().getTime() - date.getTime();
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    if (hours < 1) return "Recente";
-    if (hours < 24) return `${hours}h`;
-    return `${Math.floor(hours / 24)}d`;
-  };
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-muted/10">
       <Header />
 
       <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="flex items-center gap-2 mb-8">
-          <Heart className="w-8 h-8 text-red-500 fill-current" />
-          <h1 className="text-3xl font-bold">Meus Favoritos</h1>
-        </div>
+        <h1 className="text-3xl font-bold mb-8">Meus Favoritos</h1>
 
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="space-y-4">
-                <Skeleton className="h-48 w-full rounded-xl" />
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : favorites.length === 0 ? (
-          <div className="text-center py-20 bg-muted/30 rounded-xl">
-            <Heart className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-            <h2 className="text-2xl font-semibold mb-2">Nenhum favorito ainda</h2>
-            <p className="text-muted-foreground">
-              Explore os anúncios e salve os que você mais gostar!
-            </p>
+        {favorites.length === 0 ? (
+          <div className="text-center py-16 bg-background rounded-xl border border-dashed">
+            <Heart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-muted-foreground mb-4">
+              Você ainda não tem anúncios favoritos.
+            </h3>
+            <Button asChild variant="outline">
+              <Link to="/search">Explorar anúncios</Link>
+            </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {favorites.map((listing) => (
+              // Removed wrapping Link because ListingCard already has it
               <ListingCard
                 key={listing.id}
                 id={listing.id}
@@ -74,13 +87,17 @@ const Favorites = () => {
                 price={listing.price}
                 image={listing.images[0] || "/placeholder.svg"}
                 location={listing.location}
-                timeAgo={getTimeAgo(listing.createdAt)}
+                timeAgo={formatDistanceToNow(new Date(listing.createdAt), {
+                  addSuffix: true,
+                  locale: ptBR,
+                })}
                 isFeatured={listing.isFeatured}
               />
             ))}
           </div>
         )}
       </main>
+
       <Footer />
     </div>
   );

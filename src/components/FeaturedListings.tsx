@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { ListingCard } from "./ListingCard";
 import { listingService } from "@/services/listingService";
 import { Listing } from "@/types/listing";
@@ -11,10 +13,10 @@ export const FeaturedListings = () => {
   useEffect(() => {
     const fetchListings = async () => {
       try {
-        const data = await listingService.getFeatured();
+        const data = await listingService.fetchFeatured();
         setListings(data);
       } catch (error) {
-        console.error("Failed to fetch featured listings:", error);
+        console.error("Failed to fetch featured listings", error);
       } finally {
         setLoading(false);
       }
@@ -22,14 +24,6 @@ export const FeaturedListings = () => {
 
     fetchListings();
   }, []);
-
-  const getTimeAgo = (date: Date) => {
-    const diff = new Date().getTime() - date.getTime();
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    if (hours < 1) return "Recente";
-    if (hours < 24) return `${hours}h`;
-    return `${Math.floor(hours / 24)}d`;
-  };
 
   return (
     <section className="container mx-auto px-4 py-16 bg-muted/30">
@@ -62,7 +56,10 @@ export const FeaturedListings = () => {
               price={listing.price}
               image={listing.images[0] || "/placeholder.svg"}
               location={listing.location}
-              timeAgo={getTimeAgo(listing.createdAt)}
+              timeAgo={formatDistanceToNow(new Date(listing.createdAt), {
+                addSuffix: true,
+                locale: ptBR,
+              })}
               isFeatured={listing.isFeatured}
             />
           ))}

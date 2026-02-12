@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card";
+import { Link } from "react-router-dom";
 import { 
   Smartphone, 
   Car, 
@@ -43,17 +44,18 @@ export const CategoryGrid = () => {
         {categories.map((category) => {
           const Icon = category.icon;
           return (
-            <Card
-              key={category.id}
-              className="group cursor-pointer hover:shadow-elevated transition-all duration-300 hover:scale-105"
-            >
-              <div className="p-6 flex flex-col items-center justify-center gap-3">
-                <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${category.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                  <Icon className="w-8 h-8 text-white" />
+            <Link key={category.id} to={`/search?category=${category.name}`}>
+              <Card
+                className="group cursor-pointer hover:shadow-elevated transition-all duration-300 hover:scale-105"
+              >
+                <div className="p-6 flex flex-col items-center justify-center gap-3">
+                  <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${category.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                    <Icon className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-center">{category.name}</h3>
                 </div>
-                <h3 className="text-sm font-semibold text-center">{category.name}</h3>
-              </div>
-            </Card>
+              </Card>
+            </Link>
           );
         })}
       </div>

@@ -24,17 +24,17 @@ export const ListingCard = ({
   isFeatured 
 }: ListingCardProps) => {
   return (
-    <Card className="group relative overflow-hidden hover:shadow-elevated transition-all duration-300 hover:scale-[1.02]">
+    <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-elevated hover:-translate-y-1 border-border/50">
       <Link to={`/listing/${id}`} className="block h-full">
         {/* Image */}
         <div className="relative aspect-[4/3] overflow-hidden bg-muted">
           <img
             src={image}
             alt={title}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
           {isFeatured && (
-            <Badge className="absolute top-2 left-2 bg-accent text-accent-foreground font-semibold">
+            <Badge className="absolute top-3 left-3 bg-accent text-accent-foreground font-semibold shadow-sm">
               ⭐ Destaque
             </Badge>
           )}
@@ -63,9 +63,9 @@ export const ListingCard = ({
         </div>
       </Link>
 
-      {/* Favorite Button - Positioned absolutely on top of the link */}
-      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-        <FavoriteButton listingId={id} className="bg-white/80 hover:bg-white text-muted-foreground shadow-sm" />
+      {/* Favorite Button */}
+      <div className="absolute top-3 right-3 z-20">
+        <FavoriteButton listingId={id} className="bg-white/80 hover:bg-white text-muted-foreground shadow-sm backdrop-blur-sm" />
       </div>
     </Card>
   );

@@ -1,331 +1,260 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Listing, CreateListingDTO } from "@/types/listing";
+import { Listing, CreateListingDTO, ListingStatus, SearchFilters } from "@/types/listing";
 import { supabase } from "@/integrations/supabase/client";
 
-// Mock data
-const mockListings: Listing[] = [
+const MOCK_LISTINGS: Listing[] = [
   {
     id: "1",
-    title: "iPhone 14 Pro Max 256GB - Estado de Novo",
-    description: "Aparelho impecável, sem riscos. Acompanha caixa e carregador original. Saúde da bateria em 98%.",
+    title: "iPhone 13 Pro Max - 256GB",
+    description: "Aparelho em perfeito estado, sem riscos. Acompanha caixa e carregador original. Bateria em 92%.",
     price: 4500,
     category: "Eletrônicos",
-    location: "Pinheiros, SP",
-    images: ["https://images.unsplash.com/photo-1678911820864-e5c3100957ae?w=800&q=80"],
+    location: "São Paulo, SP",
+    images: ["https://images.unsplash.com/photo-1632661674596-df8be070a5c5?auto=format&fit=crop&q=80&w=400"],
+    userId: "user1",
+    status: "active",
     isFeatured: true,
-    status: 'active',
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2h ago
-    updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    userId: "mock-user-1"
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   },
   {
     id: "2",
-    title: "MacBook Air M2 2023 - 8GB 256GB",
-    description: "MacBook Air M2, cor Midnight. Pouco uso, apenas 15 ciclos de bateria. Garantia Apple até Dez/2025.",
-    price: 6800,
-    category: "Informática",
-    location: "Vila Madalena, SP",
-    images: ["https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&q=80"],
+    title: "Apartamento 2 Quartos - Centro",
+    description: "Lindo apartamento reformado, próximo ao metrô. Condomínio com lazer completo.",
+    price: 350000,
+    category: "Imóveis",
+    location: "Rio de Janeiro, RJ",
+    images: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=400"],
+    userId: "user2",
+    status: "active",
     isFeatured: true,
-    status: 'active',
-    createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000),
-    updatedAt: new Date(Date.now() - 5 * 60 * 60 * 1000),
-    userId: "mock-user-2"
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   },
   {
     id: "3",
-    title: "Sofá 3 Lugares Retrátil - Cinza",
-    description: "Sofá super confortável, retrátil e reclinável. Tecido Suede cinza. Motivo da venda: mudança.",
-    price: 1200,
-    category: "Casa & Jardim",
-    location: "Perdizes, SP",
-    images: ["https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&q=80"],
+    title: "PlayStation 5 - Novo",
+    description: "Console novo, lacrado, com nota fiscal e garantia de 1 ano. Versão com leitor de disco.",
+    price: 3800,
+    category: "Games",
+    location: "Curitiba, PR",
+    images: ["https://images.unsplash.com/photo-1606813907291-d86efa9b94db?auto=format&fit=crop&q=80&w=400"],
+    userId: "user3",
+    status: "active",
     isFeatured: false,
-    status: 'active',
-    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    updatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    userId: "mock-user-3"
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   },
   {
     id: "4",
-    title: "Bicicleta Speed Caloi 10 - Aro 29",
-    description: "Bicicleta revisada recentemente. Pneus novos. Ótima para iniciantes no ciclismo de estrada.",
-    price: 850,
-    category: "Esportes",
-    location: "Jardins, SP",
-    images: ["https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=800&q=80"],
+    title: "Sofá Retrátil 3 Lugares",
+    description: "Sofá muito confortável, tecido suede, cor cinza. Pouco tempo de uso.",
+    price: 1200,
+    category: "Móveis",
+    location: "Belo Horizonte, MG",
+    images: ["https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=400"],
+    userId: "user4",
+    status: "active",
     isFeatured: false,
-    status: 'active',
-    createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
-    updatedAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
-    userId: "mock-user-4"
-  },
-  {
-    id: "5",
-    title: "PlayStation 5 + 2 Controles + 3 Jogos",
-    description: "PS5 versão com disco. Acompanha God of War Ragnarok, Spider-Man 2 e FIFA 24. Tudo funcionando perfeitamente.",
-    price: 3200,
-    category: "Eletrônicos",
-    location: "Pinheiros, SP",
-    images: ["https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=800&q=80"],
-    isFeatured: true,
-    status: 'active',
-    createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000),
-    updatedAt: new Date(Date.now() - 6 * 60 * 60 * 1000),
-    userId: "mock-user-1"
-  },
-  {
-    id: "6",
-    title: "Mesa de Escritório com Gavetas - Madeira",
-    description: "Mesa robusta em madeira maciça. 3 gavetas espaçosas. Alguns detalhes de uso no tampo.",
-    price: 450,
-    category: "Casa & Jardim",
-    location: "Vila Madalena, SP",
-    images: ["https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?w=800&q=80"],
-    isFeatured: false,
-    status: 'active',
-    createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000),
-    updatedAt: new Date(Date.now() - 12 * 60 * 60 * 1000),
-    userId: "mock-user-5"
-  },
-  {
-    id: "7",
-    title: "Smart TV 55' 4K Samsung QLED",
-    description: "TV com qualidade de imagem incrível. Sistema Tizen rápido. Controle remoto solar cell.",
-    price: 2800,
-    category: "Eletrônicos",
-    location: "Perdizes, SP",
-    images: ["https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=800&q=80"],
-    isFeatured: false,
-    status: 'active',
-    createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000),
-    updatedAt: new Date(Date.now() - 8 * 60 * 60 * 1000),
-    userId: "mock-user-6"
-  },
-  {
-    id: "8",
-    title: "Câmera Canon EOS R6 + Lente 24-70mm",
-    description: "Kit profissional. Câmera com menos de 10k cliques. Lente sem fungos ou riscos.",
-    price: 12500,
-    category: "Eletrônicos",
-    location: "Jardins, SP",
-    images: ["https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=800&q=80"],
-    isFeatured: false,
-    status: 'active',
-    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    updatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    userId: "mock-user-7"
-  },
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
 ];
 
-// In-memory store for new listings created in this session
-const sessionListings: Listing[] = [...mockListings];
-
-// Mock store for favorites using localStorage to persist across reloads
-const getMockFavorites = (): Set<string> => {
-  const stored = localStorage.getItem('mock_favorites');
-  return stored ? new Set(JSON.parse(stored)) : new Set();
-};
-
-const saveMockFavorites = (favorites: Set<string>) => {
-  localStorage.setItem('mock_favorites', JSON.stringify(Array.from(favorites)));
-};
-
-// Toggle to switch between Mock and Real API
-const USE_MOCK_DATA = true;
+interface ListingRow {
+  id: string;
+  title: string;
+  description: string | null;
+  price: number;
+  category: string;
+  location: string;
+  images: string[] | null;
+  user_id: string;
+  status: string;
+  is_featured: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 export const listingService = {
-  // Favorites methods
-  toggleFavorite: async (listingId: string): Promise<boolean> => {
-    if (USE_MOCK_DATA) {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          const favorites = getMockFavorites();
-          if (favorites.has(listingId)) {
-            favorites.delete(listingId);
-            saveMockFavorites(favorites);
-            resolve(false);
-          } else {
-            favorites.add(listingId);
-            saveMockFavorites(favorites);
-            resolve(true);
-          }
-        }, 200);
-      });
+  // Existing methods from main
+  async fetchFeatured(): Promise<Listing[]> {
+    try {
+      const { data, error } = await supabase
+        .from('listings')
+        .select('*')
+        .eq('status', 'active')
+        .order('is_featured', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(8);
+
+      if (error || !data || data.length === 0) {
+        console.log('Using mock data due to Supabase error or empty result');
+        return MOCK_LISTINGS.filter(l => l.isFeatured);
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (data as any[]).map((item: ListingRow) => ({
+        id: item.id,
+        title: item.title,
+        description: item.description || undefined,
+        price: item.price,
+        category: item.category,
+        location: item.location,
+        images: item.images || [],
+        userId: item.user_id,
+        status: item.status as ListingStatus,
+        isFeatured: item.is_featured,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at,
+      }));
+    } catch (e) {
+      console.warn("Fallback to mock data for featured listings", e);
+      return MOCK_LISTINGS.filter(l => l.isFeatured);
     }
+  },
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+  // Alias for compatibility
+  async getFeatured(): Promise<Listing[]> {
+      return this.fetchFeatured();
+  },
 
-    // Check if exists
-    const { data: existing } = await supabase
-      .from('favorites')
-      .select('id')
-      .eq('listing_id', listingId)
-      .eq('user_id', user.id)
-      .single();
+  async fetchDetails(id: string): Promise<Listing | null> {
+    try {
+      const { data, error } = await supabase
+        .from('listings')
+        .select('*')
+        .eq('id', id)
+        .single();
 
-    if (existing) {
-      await supabase
-        .from('favorites')
-        .delete()
-        .eq('id', existing.id);
-      return false;
-    } else {
-      await supabase
-        .from('favorites')
-        .insert({
-          listing_id: listingId,
-          user_id: user.id
+      if (error) {
+         const mock = MOCK_LISTINGS.find(l => l.id === id);
+         return mock || null;
+      }
+
+      const item = data as unknown as ListingRow;
+      return {
+        id: item.id,
+        title: item.title,
+        description: item.description || undefined,
+        price: item.price,
+        category: item.category,
+        location: item.location,
+        images: item.images || [],
+        userId: item.user_id,
+        status: item.status as ListingStatus,
+        isFeatured: item.is_featured,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at,
+      };
+    } catch {
+      const mock = MOCK_LISTINGS.find(l => l.id === id);
+      return mock || null;
+    }
+  },
+
+  // Alias
+  async getById(id: string): Promise<Listing | null> {
+      return this.fetchDetails(id);
+  },
+
+  async searchListings(filters: SearchFilters): Promise<Listing[]> {
+    try {
+      let query = supabase
+        .from('listings')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      if (filters.query) query = query.ilike('title', `%${filters.query}%`);
+      if (filters.category) query = query.eq('category', filters.category);
+      if (filters.location) query = query.ilike('location', `%${filters.location}%`);
+      if (filters.minPrice !== undefined) query = query.gte('price', filters.minPrice);
+      if (filters.maxPrice !== undefined) query = query.lte('price', filters.maxPrice);
+
+      const { data, error } = await query;
+      if (error || !data || data.length === 0) {
+        // Simple mock filtering
+        return MOCK_LISTINGS.filter(l => {
+           if (filters.query && !l.title.toLowerCase().includes(filters.query.toLowerCase())) return false;
+           if (filters.category && l.category !== filters.category) return false;
+           return true;
         });
-      return true;
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (data as any[]).map((item: ListingRow) => ({
+        id: item.id,
+        title: item.title,
+        description: item.description || undefined,
+        price: item.price,
+        category: item.category,
+        location: item.location,
+        images: item.images || [],
+        userId: item.user_id,
+        status: item.status as ListingStatus,
+        isFeatured: item.is_featured,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at,
+      }));
+    } catch {
+        return MOCK_LISTINGS.filter(l => {
+           if (filters.query && !l.title.toLowerCase().includes(filters.query.toLowerCase())) return false;
+           if (filters.category && l.category !== filters.category) return false;
+           return true;
+        });
     }
   },
 
-  isFavorited: async (listingId: string): Promise<boolean> => {
-    if (USE_MOCK_DATA) {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          const favorites = getMockFavorites();
-          resolve(favorites.has(listingId));
-        }, 100);
-      });
-    }
+  async fetchUserListings(userId: string): Promise<Listing[]> {
+    const { data, error } = await supabase
+      .from('listings')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return false;
+    if (error) throw error;
 
-    const { data } = await supabase
-      .from('favorites')
-      .select('id')
-      .eq('listing_id', listingId)
-      .eq('user_id', user.id)
-      .single();
-
-    return !!data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (data as any[]).map((item: ListingRow) => ({
+      id: item.id,
+      title: item.title,
+      description: item.description || undefined,
+      price: item.price,
+      category: item.category,
+      location: item.location,
+      images: item.images || [],
+      userId: item.user_id,
+      status: item.status as ListingStatus,
+      isFeatured: item.is_featured,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
+    }));
   },
 
-  getFavorites: async (): Promise<Listing[]> => {
-    if (USE_MOCK_DATA) {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          const favoritesSet = getMockFavorites();
-          const favorites = sessionListings.filter(l => favoritesSet.has(l.id));
-          resolve(favorites);
-        }, 500);
-      });
-    }
+  async uploadListingImage(file: File): Promise<string> {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${crypto.randomUUID()}.${fileExt}`;
+    const filePath = `${fileName}`;
 
+    const { error: uploadError } = await supabase.storage
+      .from('listing-images')
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data } = supabase.storage
+      .from('listing-images')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  },
+
+  async createListing(listing: CreateListingDTO): Promise<Listing> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
     const { data, error } = await supabase
-      .from('favorites')
-      .select(`
-        listing_id,
-        listings:listing_id (*)
-      `)
-      .eq('user_id', user.id);
-
-    if (error) throw error;
-
-    // Map nested listing data
-    return data.map((item: any) => {
-      const listing = item.listings;
-      return {
-        ...listing,
-        isFeatured: listing.is_featured,
-        createdAt: new Date(listing.created_at),
-        updatedAt: new Date(listing.updated_at),
-        userId: listing.user_id,
-        images: listing.images || []
-      };
-    });
-  },
-
-  getFeatured: async (): Promise<Listing[]> => {
-    if (USE_MOCK_DATA) {
-      // Return top 4 or all? FeaturedListings usually shows 8
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve(sessionListings);
-        }, 500);
-      });
-    }
-
-    // Use any cast to bypass type check for missing 'listings' table in generated types
-    const { data, error } = await (supabase as any)
-      .from('listings')
-      .select('*')
-      .eq('status', 'active')
-      .order('is_featured', { ascending: false })
-      .order('created_at', { ascending: false })
-      .limit(8);
-
-    if (error) throw error;
-
-    // Map Supabase response to Listing interface
-    return data.map((item: any) => ({
-      ...item,
-      isFeatured: item.is_featured,
-      createdAt: new Date(item.created_at),
-      updatedAt: new Date(item.updated_at),
-      userId: item.user_id,
-      images: item.images || []
-    }));
-  },
-
-  getById: async (id: string): Promise<Listing | null> => {
-    if (USE_MOCK_DATA) {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          const listing = sessionListings.find(l => l.id === id);
-          resolve(listing || null);
-        }, 300);
-      });
-    }
-
-    const { data, error } = await (supabase as any)
-      .from('listings')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error) return null;
-
-    return {
-      ...data,
-      isFeatured: data.is_featured,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at),
-      userId: data.user_id,
-      images: data.images || []
-    };
-  },
-
-  create: async (listing: CreateListingDTO): Promise<Listing> => {
-    if (USE_MOCK_DATA) {
-      return new Promise((resolve) => {
-        const newListing: Listing = {
-          ...listing,
-          id: Math.random().toString(36).substr(2, 9),
-          isFeatured: false,
-          status: 'active',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          userId: 'current-user-id' // Should ideally come from auth context
-        };
-        sessionListings.unshift(newListing); // Add to beginning
-        setTimeout(() => {
-          resolve(newListing);
-        }, 800);
-      });
-    }
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
-
-    const { data, error } = await (supabase as any)
       .from('listings')
       .insert({
         title: listing.title,
@@ -334,20 +263,84 @@ export const listingService = {
         category: listing.category,
         location: listing.location,
         images: listing.images,
-        user_id: user.id
+        user_id: user.id,
       })
       .select()
       .single();
 
     if (error) throw error;
+    const item = data as unknown as ListingRow;
 
     return {
-      ...data,
-      isFeatured: data.is_featured,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at),
-      userId: data.user_id,
-      images: data.images || []
+      id: item.id,
+      title: item.title,
+      description: item.description || undefined,
+      price: item.price,
+      category: item.category,
+      location: item.location,
+      images: item.images || [],
+      userId: item.user_id,
+      status: item.status as ListingStatus,
+      isFeatured: item.is_featured,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
     };
-  }
+  },
+
+  // Alias
+  async create(listing: CreateListingDTO): Promise<Listing> {
+      return this.createListing(listing);
+  },
+
+  async deleteListing(id: string, imageUrls: string[]): Promise<void> {
+    if (imageUrls && imageUrls.length > 0) {
+      const paths = imageUrls.map((url) => {
+        const urlObj = new URL(url);
+        const pathParts = urlObj.pathname.split('/');
+        return pathParts[pathParts.length - 1];
+      });
+
+      await supabase.storage.from('listing-images').remove(paths);
+    }
+    await supabase.from('listings').delete().eq('id', id);
+  },
+
+  async updateListing(id: string, listing: CreateListingDTO): Promise<Listing> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const { data, error } = await supabase
+      .from('listings')
+      .update({
+        title: listing.title,
+        description: listing.description,
+        price: listing.price,
+        category: listing.category,
+        location: listing.location,
+        images: listing.images,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    const item = data as unknown as ListingRow;
+
+    return {
+      id: item.id,
+      title: item.title,
+      description: item.description || undefined,
+      price: item.price,
+      category: item.category,
+      location: item.location,
+      images: item.images || [],
+      userId: item.user_id,
+      status: item.status as ListingStatus,
+      isFeatured: item.is_featured,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
+    };
+  },
 };
