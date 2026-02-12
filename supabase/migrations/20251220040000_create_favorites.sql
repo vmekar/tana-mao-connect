@@ -11,18 +11,21 @@ create table if not exists favorites (
 alter table favorites enable row level security;
 
 -- Policies for favorites
+drop policy if exists "Users can insert their own favorites" on favorites;
 create policy "Users can insert their own favorites"
   on favorites for insert
   with check ( auth.uid() = user_id );
 
+drop policy if exists "Users can view their own favorites" on favorites;
 create policy "Users can view their own favorites"
   on favorites for select
   using ( auth.uid() = user_id );
 
+drop policy if exists "Users can delete their own favorites" on favorites;
 create policy "Users can delete their own favorites"
   on favorites for delete
   using ( auth.uid() = user_id );
 
 -- Indexes
-create index favorites_user_id_idx on favorites (user_id);
-create index favorites_listing_id_idx on favorites (listing_id);
+create index if not exists favorites_user_id_idx on favorites (user_id);
+create index if not exists favorites_listing_id_idx on favorites (listing_id);

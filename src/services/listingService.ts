@@ -182,20 +182,25 @@ export const listingService = {
     // Delete images from storage first
     if (imageUrls && imageUrls.length > 0) {
       const paths = imageUrls.map((url) => {
-        const urlObj = new URL(url);
-        // Path is typically /storage/v1/object/public/listing-images/<filename>
-        const pathParts = urlObj.pathname.split('/');
-        return pathParts[pathParts.length - 1]; // filename
-      });
+        try {
+            const urlObj = new URL(url);
+            // Path is typically /storage/v1/object/public/listing-images/<filename>
+            const pathParts = urlObj.pathname.split('/');
+            return pathParts[pathParts.length - 1]; // filename
+        } catch (e) {
+            console.error("Error parsing URL for deletion", url);
+            return null;
+        }
+      }).filter(Boolean) as string[];
 
-      const { error: storageError } = await supabase.storage
-        .from('listing-images')
-        .remove(paths);
-
-      if (storageError) {
-        console.error('Error deleting images:', storageError);
-        // Continue to delete listing even if image deletion fails,
-        // though ideally we'd want to handle this better.
+      if (paths.length > 0) {
+        const { error: storageError } = await supabase.storage
+            .from('listing-images')
+            .remove(paths);
+        
+        if (storageError) {
+            console.error('Error deleting images:', storageError);
+        }
       }
     }
 
@@ -266,7 +271,7 @@ export const listingService = {
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
-      .eq('user_id', user.id) // Ensure user owns the listing
+      .eq('user_id', user.id)
       .select()
       .single();
 
