@@ -2,8 +2,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import heroBanner from "@/assets/hero-banner.jpg";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export const Hero = () => {
+  const [query, setQuery] = useState("");
+  const navigate = useNavigate();
+
+  const handleSearch = () => {
+    if (query.trim()) {
+      navigate(`/search?query=${encodeURIComponent(query)}`);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
   return (
     <section className="relative overflow-hidden bg-gradient-hero min-h-[600px] flex items-center">
       {/* Background Image with Overlay */}
@@ -32,8 +49,11 @@ export const Hero = () => {
               type="text"
               placeholder="O que você está procurando?"
               className="flex-1 border-0 bg-transparent text-lg focus-visible:ring-0"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
             />
-            <Button variant="hero" size="lg" className="px-8">
+            <Button variant="hero" size="lg" className="px-8" onClick={handleSearch}>
               <Search className="mr-2 h-5 w-5" />
               Buscar
             </Button>
@@ -42,10 +62,10 @@ export const Hero = () => {
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button variant="cta" size="xl">
+          <Button variant="cta" size="xl" onClick={() => navigate('/anunciar')}>
             Anunciar Grátis
           </Button>
-          <Button variant="outline" size="xl" className="bg-background/90 hover:bg-background border-primary-foreground/20 text-foreground">
+          <Button variant="outline" size="xl" className="bg-background/90 hover:bg-background border-primary-foreground/20 text-foreground" onClick={() => navigate('/search')}>
             Ver Categorias
           </Button>
         </div>

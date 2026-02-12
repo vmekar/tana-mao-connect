@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, User, Menu, LogOut } from "lucide-react";
+import { Heart, MessageCircle, User, Menu, LogOut, List } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
   DropdownMenu,
@@ -38,7 +38,7 @@ export const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
-            <Button variant="ghost">Categorias</Button>
+            <Button variant="ghost" asChild><Link to="/search">Categorias</Link></Button>
             <Button variant="ghost">Como Funciona</Button>
             <Button variant="ghost">Ajuda</Button>
           </nav>
@@ -47,11 +47,15 @@ export const Header = () => {
           <div className="flex items-center gap-2">
             {user ? (
               <>
-                <Button variant="ghost" size="icon" className="hidden md:flex">
-                  <Heart className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="hidden md:flex" asChild>
+                  <Link to="/favorites">
+                    <Heart className="h-5 w-5" />
+                  </Link>
                 </Button>
-                <Button variant="ghost" size="icon" className="hidden md:flex">
-                  <MessageCircle className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="hidden md:flex" asChild>
+                  <Link to="/inbox">
+                    <MessageCircle className="h-5 w-5" />
+                  </Link>
                 </Button>
                 
                 <DropdownMenu>
@@ -65,9 +69,29 @@ export const Header = () => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem className="flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      Meu Perfil
+                    <DropdownMenuItem className="flex items-center gap-2" asChild>
+                      <Link to="/my-ads">
+                        <List className="h-4 w-4" />
+                        Meus Anúncios
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="flex items-center gap-2" asChild>
+                       <Link to="/inbox">
+                        <MessageCircle className="h-4 w-4" />
+                        Mensagens
+                      </Link>
+                    </DropdownMenuItem>
+                     <DropdownMenuItem className="flex items-center gap-2" asChild>
+                      <Link to="/favorites">
+                        <Heart className="h-4 w-4" />
+                        Meus Favoritos
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="flex items-center gap-2" asChild>
+                      <Link to="/profile">
+                        <User className="h-4 w-4" />
+                        Meu Perfil
+                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem 
@@ -80,8 +104,8 @@ export const Header = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
                 
-                <Button variant="default" className="hidden md:flex">
-                  Anunciar Grátis
+                <Button variant="default" className="hidden md:flex" asChild>
+                  <Link to="/anunciar">Anunciar Grátis</Link>
                 </Button>
               </>
             ) : (
