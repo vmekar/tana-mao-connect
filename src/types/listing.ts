@@ -1,4 +1,4 @@
-export type ListingStatus = 'active' | 'sold' | 'expired' | 'paused' | 'deleted';
+export type ListingStatus = 'active' | 'sold' | 'expired';
 
 export interface Listing {
   id: string;
@@ -11,8 +11,8 @@ export interface Listing {
   userId: string;
   status: ListingStatus;
   isFeatured: boolean;
-  createdAt: Date | string; // Allow both for compatibility
-  updatedAt: Date | string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateListingDTO {

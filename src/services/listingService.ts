@@ -1,6 +1,20 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { Listing, CreateListingDTO, ListingStatus, SearchFilters } from "@/types/listing";
+import { CreateListingDTO, Listing, ListingStatus, SearchFilters } from "@/types/listing";
 import { supabase } from "@/integrations/supabase/client";
+
+interface ListingRow {
+  id: string;
+  title: string;
+  description: string | null;
+  price: number;
+  category: string;
+  location: string;
+  images: string[] | null;
+  user_id: string;
+  status: string;
+  is_featured: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 const MOCK_LISTINGS: Listing[] = [
   {
@@ -61,23 +75,7 @@ const MOCK_LISTINGS: Listing[] = [
   }
 ];
 
-interface ListingRow {
-  id: string;
-  title: string;
-  description: string | null;
-  price: number;
-  category: string;
-  location: string;
-  images: string[] | null;
-  user_id: string;
-  status: string;
-  is_featured: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
 export const listingService = {
-  // Existing methods from main
   async fetchFeatured(): Promise<Listing[]> {
     try {
       const { data, error } = await supabase
@@ -89,7 +87,7 @@ export const listingService = {
         .limit(8);
 
       if (error || !data || data.length === 0) {
-        console.log('Using mock data due to Supabase error or empty result');
+        console.warn('Error fetching featured listings or empty, using mock:', error);
         return MOCK_LISTINGS.filter(l => l.isFeatured);
       }
 
@@ -109,14 +107,9 @@ export const listingService = {
         updatedAt: item.updated_at,
       }));
     } catch (e) {
-      console.warn("Fallback to mock data for featured listings", e);
+      console.warn('Exception fetching featured listings, using mock:', e);
       return MOCK_LISTINGS.filter(l => l.isFeatured);
     }
-  },
-
-  // Alias for compatibility
-  async getFeatured(): Promise<Listing[]> {
-      return this.fetchFeatured();
   },
 
   async fetchDetails(id: string): Promise<Listing | null> {
@@ -128,11 +121,11 @@ export const listingService = {
         .single();
 
       if (error) {
-         const mock = MOCK_LISTINGS.find(l => l.id === id);
-         return mock || null;
+        return MOCK_LISTINGS.find(l => l.id === id) || null;
       }
 
       const item = data as unknown as ListingRow;
+
       return {
         id: item.id,
         title: item.title,
@@ -148,14 +141,8 @@ export const listingService = {
         updatedAt: item.updated_at,
       };
     } catch {
-      const mock = MOCK_LISTINGS.find(l => l.id === id);
-      return mock || null;
+       return MOCK_LISTINGS.find(l => l.id === id) || null;
     }
-  },
-
-  // Alias
-  async getById(id: string): Promise<Listing | null> {
-      return this.fetchDetails(id);
   },
 
   async searchListings(filters: SearchFilters): Promise<Listing[]> {
@@ -166,15 +153,30 @@ export const listingService = {
         .eq('status', 'active')
         .order('created_at', { ascending: false });
 
-      if (filters.query) query = query.ilike('title', `%${filters.query}%`);
-      if (filters.category) query = query.eq('category', filters.category);
-      if (filters.location) query = query.ilike('location', `%${filters.location}%`);
-      if (filters.minPrice !== undefined) query = query.gte('price', filters.minPrice);
-      if (filters.maxPrice !== undefined) query = query.lte('price', filters.maxPrice);
+      if (filters.query) {
+        query = query.ilike('title', `%${filters.query}%`);
+      }
+
+      if (filters.category) {
+        query = query.eq('category', filters.category);
+      }
+
+      if (filters.location) {
+        query = query.ilike('location', `%${filters.location}%`);
+      }
+
+      if (filters.minPrice !== undefined) {
+        query = query.gte('price', filters.minPrice);
+      }
+
+      if (filters.maxPrice !== undefined) {
+        query = query.lte('price', filters.maxPrice);
+      }
 
       const { data, error } = await query;
-      if (error || !data || data.length === 0) {
-        // Simple mock filtering
+
+      if (error) {
+        console.error('Error searching listings, using mock:', error);
         return MOCK_LISTINGS.filter(l => {
            if (filters.query && !l.title.toLowerCase().includes(filters.query.toLowerCase())) return false;
            if (filters.category && l.category !== filters.category) return false;
@@ -241,7 +243,9 @@ export const listingService = {
       .from('listing-images')
       .upload(filePath, file);
 
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      throw uploadError;
+    }
 
     const { data } = supabase.storage
       .from('listing-images')
@@ -250,8 +254,41 @@ export const listingService = {
     return data.publicUrl;
   },
 
+  async deleteListing(id: string, imageUrls: string[]): Promise<void> {
+    // Delete images from storage first
+    if (imageUrls && imageUrls.length > 0) {
+      const paths = imageUrls.map((url) => {
+        const urlObj = new URL(url);
+        // Path is typically /storage/v1/object/public/listing-images/<filename>
+        const pathParts = urlObj.pathname.split('/');
+        return pathParts[pathParts.length - 1]; // filename
+      });
+
+      const { error: storageError } = await supabase.storage
+        .from('listing-images')
+        .remove(paths);
+
+      if (storageError) {
+        console.error('Error deleting images:', storageError);
+        // Continue to delete listing even if image deletion fails,
+        // though ideally we'd want to handle this better.
+      }
+    }
+
+    const { error } = await supabase
+      .from('listings')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting listing:', error);
+      throw error;
+    }
+  },
+
   async createListing(listing: CreateListingDTO): Promise<Listing> {
     const { data: { user } } = await supabase.auth.getUser();
+
     if (!user) throw new Error('User not authenticated');
 
     const { data, error } = await supabase
@@ -269,6 +306,7 @@ export const listingService = {
       .single();
 
     if (error) throw error;
+
     const item = data as unknown as ListingRow;
 
     return {
@@ -287,26 +325,9 @@ export const listingService = {
     };
   },
 
-  // Alias
-  async create(listing: CreateListingDTO): Promise<Listing> {
-      return this.createListing(listing);
-  },
-
-  async deleteListing(id: string, imageUrls: string[]): Promise<void> {
-    if (imageUrls && imageUrls.length > 0) {
-      const paths = imageUrls.map((url) => {
-        const urlObj = new URL(url);
-        const pathParts = urlObj.pathname.split('/');
-        return pathParts[pathParts.length - 1];
-      });
-
-      await supabase.storage.from('listing-images').remove(paths);
-    }
-    await supabase.from('listings').delete().eq('id', id);
-  },
-
   async updateListing(id: string, listing: CreateListingDTO): Promise<Listing> {
     const { data: { user } } = await supabase.auth.getUser();
+
     if (!user) throw new Error('User not authenticated');
 
     const { data, error } = await supabase
@@ -321,11 +342,12 @@ export const listingService = {
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
-      .eq('user_id', user.id)
+      .eq('user_id', user.id) // Ensure user owns the listing
       .select()
       .single();
 
     if (error) throw error;
+
     const item = data as unknown as ListingRow;
 
     return {

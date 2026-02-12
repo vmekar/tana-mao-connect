@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ListingCard } from "./ListingCard";
 import { listingService } from "@/services/listingService";
 import { Listing } from "@/types/listing";
-import { Skeleton } from "@/components/ui/skeleton";
 
 export const FeaturedListings = () => {
   const [listings, setListings] = useState<Listing[]>([]);
@@ -25,6 +25,19 @@ export const FeaturedListings = () => {
     fetchListings();
   }, []);
 
+  if (loading) {
+    return (
+      <section className="container mx-auto px-4 py-16 bg-muted/30">
+        <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
+          Anúncios em Destaque
+        </h2>
+        <div className="flex justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="container mx-auto px-4 py-16 bg-muted/30">
       <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
@@ -34,23 +47,10 @@ export const FeaturedListings = () => {
         As melhores ofertas perto de você
       </p>
 
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="space-y-4">
-              <Skeleton className="h-48 w-full rounded-xl" />
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {listings.map((listing) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {listings.map((listing) => (
+          <Link key={listing.id} to={`/listing/${listing.id}`}>
             <ListingCard
-              key={listing.id}
               id={listing.id}
               title={listing.title}
               price={listing.price}
@@ -62,9 +62,9 @@ export const FeaturedListings = () => {
               })}
               isFeatured={listing.isFeatured}
             />
-          ))}
-        </div>
-      )}
+          </Link>
+        ))}
+      </div>
     </section>
   );
 };

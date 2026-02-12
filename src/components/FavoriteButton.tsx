@@ -34,7 +34,7 @@ export const FavoriteButton = ({ listingId, className, variant = "icon" }: Favor
       <Heart
         className={cn("w-5 h-5", isFavorited && "fill-current")}
       />
-      {variant !== "icon" && <span className="ml-2">Salvar</span>}
+      {variant !== "icon" && <span className="ml-2">{isFavorited ? "Salvo" : "Salvar"}</span>}
     </Button>
   );
 };
