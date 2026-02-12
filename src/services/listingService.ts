@@ -121,10 +121,128 @@ const mockListings: Listing[] = [
 // In-memory store for new listings created in this session
 const sessionListings: Listing[] = [...mockListings];
 
+// Mock store for favorites using localStorage to persist across reloads
+const getMockFavorites = (): Set<string> => {
+  const stored = localStorage.getItem('mock_favorites');
+  return stored ? new Set(JSON.parse(stored)) : new Set();
+};
+
+const saveMockFavorites = (favorites: Set<string>) => {
+  localStorage.setItem('mock_favorites', JSON.stringify(Array.from(favorites)));
+};
+
 // Toggle to switch between Mock and Real API
 const USE_MOCK_DATA = true;
 
 export const listingService = {
+  // Favorites methods
+  toggleFavorite: async (listingId: string): Promise<boolean> => {
+    if (USE_MOCK_DATA) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          const favorites = getMockFavorites();
+          if (favorites.has(listingId)) {
+            favorites.delete(listingId);
+            saveMockFavorites(favorites);
+            resolve(false);
+          } else {
+            favorites.add(listingId);
+            saveMockFavorites(favorites);
+            resolve(true);
+          }
+        }, 200);
+      });
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    // Check if exists
+    const { data: existing } = await supabase
+      .from('favorites')
+      .select('id')
+      .eq('listing_id', listingId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (existing) {
+      await supabase
+        .from('favorites')
+        .delete()
+        .eq('id', existing.id);
+      return false;
+    } else {
+      await supabase
+        .from('favorites')
+        .insert({
+          listing_id: listingId,
+          user_id: user.id
+        });
+      return true;
+    }
+  },
+
+  isFavorited: async (listingId: string): Promise<boolean> => {
+    if (USE_MOCK_DATA) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          const favorites = getMockFavorites();
+          resolve(favorites.has(listingId));
+        }, 100);
+      });
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+
+    const { data } = await supabase
+      .from('favorites')
+      .select('id')
+      .eq('listing_id', listingId)
+      .eq('user_id', user.id)
+      .single();
+
+    return !!data;
+  },
+
+  getFavorites: async (): Promise<Listing[]> => {
+    if (USE_MOCK_DATA) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          const favoritesSet = getMockFavorites();
+          const favorites = sessionListings.filter(l => favoritesSet.has(l.id));
+          resolve(favorites);
+        }, 500);
+      });
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const { data, error } = await supabase
+      .from('favorites')
+      .select(`
+        listing_id,
+        listings:listing_id (*)
+      `)
+      .eq('user_id', user.id);
+
+    if (error) throw error;
+
+    // Map nested listing data
+    return data.map((item: any) => {
+      const listing = item.listings;
+      return {
+        ...listing,
+        isFeatured: listing.is_featured,
+        createdAt: new Date(listing.created_at),
+        updatedAt: new Date(listing.updated_at),
+        userId: listing.user_id,
+        images: listing.images || []
+      };
+    });
+  },
+
   getFeatured: async (): Promise<Listing[]> => {
     if (USE_MOCK_DATA) {
       // Return top 4 or all? FeaturedListings usually shows 8

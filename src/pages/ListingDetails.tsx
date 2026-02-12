@@ -6,9 +6,10 @@ import { Listing } from "@/types/listing";
 import { listingService } from "@/services/listingService";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Clock, Share2, Heart, MessageCircle, ShieldCheck } from "lucide-react";
+import { MapPin, Clock, Share2, MessageCircle, ShieldCheck } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { FavoriteButton } from "@/components/FavoriteButton";
 
 const ListingDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -166,10 +167,11 @@ const ListingDetails = () => {
                     <MessageCircle className="w-4 h-4 mr-2" />
                     Chat
                   </Button>
-                  <Button variant="outline" className="w-full" size="lg">
-                    <Heart className="w-4 h-4 mr-2" />
-                    Salvar
-                  </Button>
+                  <FavoriteButton
+                    listingId={listing.id}
+                    variant="outline"
+                    className="w-full"
+                  />
                 </div>
 
                 <Button variant="secondary" className="w-full" size="lg">

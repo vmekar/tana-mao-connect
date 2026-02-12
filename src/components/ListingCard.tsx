@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Clock } from "lucide-react";
+import { FavoriteButton } from "@/components/FavoriteButton";
 
 interface ListingCardProps {
   id: string;
@@ -23,44 +24,49 @@ export const ListingCard = ({
   isFeatured 
 }: ListingCardProps) => {
   return (
-    <Link to={`/listing/${id}`}>
-    <Card className="group cursor-pointer overflow-hidden hover:shadow-elevated transition-all duration-300 hover:scale-[1.02]">
-      {/* Image */}
-      <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-        <img
-          src={image}
-          alt={title}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-        />
-        {isFeatured && (
-          <Badge className="absolute top-2 left-2 bg-accent text-accent-foreground font-semibold">
-            ⭐ Destaque
-          </Badge>
-        )}
-      </div>
-
-      {/* Content */}
-      <div className="p-4">
-        <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-          {title}
-        </h3>
-        
-        <div className="text-2xl font-bold text-primary mb-3">
-          R$ {price.toLocaleString('pt-BR')}
+    <Card className="group relative overflow-hidden hover:shadow-elevated transition-all duration-300 hover:scale-[1.02]">
+      <Link to={`/listing/${id}`} className="block h-full">
+        {/* Image */}
+        <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+          <img
+            src={image}
+            alt={title}
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+          />
+          {isFeatured && (
+            <Badge className="absolute top-2 left-2 bg-accent text-accent-foreground font-semibold">
+              ⭐ Destaque
+            </Badge>
+          )}
         </div>
 
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <MapPin className="w-4 h-4" />
-            <span className="line-clamp-1">{location}</span>
+        {/* Content */}
+        <div className="p-4">
+          <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+            {title}
+          </h3>
+
+          <div className="text-2xl font-bold text-primary mb-3">
+            R$ {price.toLocaleString('pt-BR')}
           </div>
-          <div className="flex items-center gap-1">
-            <Clock className="w-4 h-4" />
-            <span>{timeAgo}</span>
+
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <MapPin className="w-4 h-4" />
+              <span className="line-clamp-1">{location}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Clock className="w-4 h-4" />
+              <span>{timeAgo}</span>
+            </div>
           </div>
         </div>
+      </Link>
+
+      {/* Favorite Button - Positioned absolutely on top of the link */}
+      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+        <FavoriteButton listingId={id} className="bg-white/80 hover:bg-white text-muted-foreground shadow-sm" />
       </div>
     </Card>
-    </Link>
   );
 };

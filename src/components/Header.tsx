@@ -47,8 +47,10 @@ export const Header = () => {
           <div className="flex items-center gap-2">
             {user ? (
               <>
-                <Button variant="ghost" size="icon" className="hidden md:flex">
-                  <Heart className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="hidden md:flex" asChild>
+                  <Link to="/favorites">
+                    <Heart className="h-5 w-5" />
+                  </Link>
                 </Button>
                 <Button variant="ghost" size="icon" className="hidden md:flex">
                   <MessageCircle className="h-5 w-5" />
