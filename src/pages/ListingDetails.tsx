@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { listingService } from "@/services/listingService";
 import { messageService, Profile } from "@/services/messageService";
