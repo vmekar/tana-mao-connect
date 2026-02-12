@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { favoriteService } from "@/services/favoriteService";
 import { Listing } from "@/types/listing";
@@ -10,7 +11,6 @@ import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Heart } from "lucide-react";
-import { useEffect, useState } from "react";
 
 const Favorites = () => {
   const { user, loading: authLoading } = useAuth();
@@ -79,19 +79,20 @@ const Favorites = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {favorites.map((listing) => (
-              <ListingCard
-                key={listing.id}
-                id={listing.id}
-                title={listing.title}
-                price={listing.price}
-                image={listing.images[0] || "/placeholder.svg"}
-                location={listing.location}
-                timeAgo={formatDistanceToNow(new Date(listing.createdAt), {
-                  addSuffix: true,
-                  locale: ptBR,
-                })}
-                isFeatured={listing.isFeatured}
-              />
+              <Link key={listing.id} to={`/listing/${listing.id}`}>
+                <ListingCard
+                  id={listing.id}
+                  title={listing.title}
+                  price={listing.price}
+                  image={listing.images[0] || "/placeholder.svg"}
+                  location={listing.location}
+                  timeAgo={formatDistanceToNow(new Date(listing.createdAt), {
+                    addSuffix: true,
+                    locale: ptBR,
+                  })}
+                  isFeatured={listing.isFeatured}
+                />
+              </Link>
             ))}
           </div>
         )}

@@ -129,11 +129,10 @@ const ListingDetails = () => {
               Voltar
             </Link>
 
-            {/* Favorite Button */}
             <FavoriteButton
               listingId={listing.id}
               variant="outline"
-              className="gap-2 border-red-200"
+              className="gap-2"
             />
           </div>
 
