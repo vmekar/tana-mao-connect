@@ -12,6 +12,7 @@ import { MapPin, Clock, MessageCircle, Share2, ArrowLeft, Phone } from "lucide-r
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { FavoriteButton } from "@/components/FavoriteButton";
+import { MapComponent } from "@/components/MapComponent";
 
 const ListingDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -192,6 +193,16 @@ const ListingDetails = () => {
                     <p className="font-medium">Usado - Bom estado</p>
                   </div>
                 </div>
+              </div>
+
+              {/* Map */}
+              <div className="bg-background p-6 rounded-xl shadow-sm border">
+                <h2 className="text-xl font-semibold mb-4">Localização</h2>
+                <div className="flex items-center gap-2 text-muted-foreground mb-4">
+                    <MapPin className="w-5 h-5 text-primary" />
+                    <span>{listing.location}</span>
+                </div>
+                <MapComponent location={listing.location} />
               </div>
 
               {/* Message Form (Desktop) */}

@@ -3,7 +3,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SearchFilters as SearchFiltersType } from "@/types/listing";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { locationService, State, City } from "@/services/locationService";
 
 const CATEGORIES = [
   "Todos",
@@ -30,14 +31,55 @@ export const SearchFilters = ({ initialFilters, onFilterChange }: SearchFiltersP
   const [category, setCategory] = useState(initialFilters.category || "Todos");
   const [minPrice, setMinPrice] = useState(initialFilters.minPrice?.toString() || "");
   const [maxPrice, setMaxPrice] = useState(initialFilters.maxPrice?.toString() || "");
-  const [location, setLocation] = useState(initialFilters.location || "");
+
+  const [states, setStates] = useState<State[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
+  const [selectedState, setSelectedState] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
+
+  useEffect(() => {
+    locationService.fetchStates().then(setStates);
+  }, []);
+
+  useEffect(() => {
+    if (selectedState && selectedState !== "all") {
+      locationService.fetchCities(selectedState).then(setCities);
+    } else {
+      setCities([]);
+    }
+  }, [selectedState]);
+
+  useEffect(() => {
+    if (initialFilters.location) {
+      const parts = initialFilters.location.split(" - ");
+      if (parts.length === 2) {
+        setSelectedCity(parts[0]);
+        setSelectedState(parts[1]);
+      } else if (parts.length === 1 && parts[0].length === 2) {
+        setSelectedState(parts[0]);
+        setSelectedCity("");
+      }
+    } else {
+      setSelectedState("");
+      setSelectedCity("");
+    }
+  }, [initialFilters.location]);
 
   const handleApply = () => {
+    let loc = undefined;
+    if (selectedState && selectedState !== "all") {
+        if (selectedCity && selectedCity !== "all") {
+            loc = `${selectedCity} - ${selectedState}`;
+        } else {
+            loc = selectedState;
+        }
+    }
+
     onFilterChange({
       category: category === "Todos" ? undefined : category,
       minPrice: minPrice ? Number(minPrice) : undefined,
       maxPrice: maxPrice ? Number(maxPrice) : undefined,
-      location: location || undefined,
+      location: loc,
     });
   };
 
@@ -45,7 +87,8 @@ export const SearchFilters = ({ initialFilters, onFilterChange }: SearchFiltersP
     setCategory("Todos");
     setMinPrice("");
     setMaxPrice("");
-    setLocation("");
+    setSelectedState("");
+    setSelectedCity("");
     onFilterChange({});
   };
 
@@ -70,12 +113,47 @@ export const SearchFilters = ({ initialFilters, onFilterChange }: SearchFiltersP
       </div>
 
       <div className="space-y-2">
-        <Label>Localização</Label>
-        <Input
-          placeholder="Cidade ou Estado"
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-        />
+        <Label>Estado (UF)</Label>
+        <Select
+          value={selectedState}
+          onValueChange={(val) => {
+            setSelectedState(val);
+            setSelectedCity("");
+          }}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Todos os Estados" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            {states.map((state) => (
+              <SelectItem key={state.id} value={state.sigla}>
+                {state.sigla} - {state.nome}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Cidade</Label>
+        <Select
+          value={selectedCity}
+          onValueChange={setSelectedCity}
+          disabled={!selectedState || selectedState === "all"}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Todas as Cidades" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas</SelectItem>
+            {cities.map((city) => (
+              <SelectItem key={city.id} value={city.nome}>
+                {city.nome}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">
