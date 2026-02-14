@@ -15,6 +15,7 @@ import Profile from "./pages/Profile";
 import Inbox from "./pages/Inbox";
 import Favorites from "./pages/Favorites";
 import { BottomNav } from "@/components/BottomNav";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -29,13 +30,58 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/listing/:id" element={<ListingDetails />} />
-            <Route path="/anunciar" element={<CreateListing />} />
-            <Route path="/listing/edit/:id" element={<CreateListing />} />
+
+            {/* Protected Routes */}
+            <Route
+              path="/anunciar"
+              element={
+                <ProtectedRoute>
+                  <CreateListing />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/listing/edit/:id"
+              element={
+                <ProtectedRoute>
+                  <CreateListing />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-ads"
+              element={
+                <ProtectedRoute>
+                  <MyAds />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/inbox"
+              element={
+                <ProtectedRoute>
+                  <Inbox />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/favorites"
+              element={
+                <ProtectedRoute>
+                  <Favorites />
+                </ProtectedRoute>
+              }
+            />
+
             <Route path="/search" element={<Search />} />
-            <Route path="/my-ads" element={<MyAds />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/inbox" element={<Inbox />} />
-            <Route path="/favorites" element={<Favorites />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
