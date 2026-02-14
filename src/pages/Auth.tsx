@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Mail, Lock, User, CheckCircle } from 'lucide-react';
+import { Logo } from '@/components/Logo';
 import { z } from 'zod';
 
 const emailSchema = z.string().email('Email inválido');
@@ -166,12 +167,9 @@ export default function Auth() {
       
       <Card className="w-full max-w-md relative z-10 shadow-elevated border-border/50">
         <CardHeader className="text-center space-y-2">
-          <div className="flex justify-center mb-2">
-            <div className="text-5xl">🤝</div>
+          <div className="flex justify-center mb-6">
+            <Logo size="lg" />
           </div>
-          <CardTitle className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            TanaMão
-          </CardTitle>
           <CardDescription>
             Conectando quem precisa com quem pode ajudar
           </CardDescription>

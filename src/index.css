@@ -21,30 +21,30 @@ All colors MUST be HSL.
     --popover-foreground: 240 10% 3.9%;
 
     /* TanaMão Brand Colors - Vibrant and Trustworthy */
-    --primary: 262 83% 58%; /* Electric Purple */
+    --primary: 243 75% 59%; /* Vivid Indigo */
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 262 83% 68%;
+    --primary-glow: 243 75% 74%;
 
-    --secondary: 173 80% 40%; /* Teal/Turquoise */
+    --secondary: 25 95% 53%; /* Vibrant Orange for CTAs */
     --secondary-foreground: 0 0% 100%;
 
     --muted: 240 4.8% 95.9%;
     --muted-foreground: 240 3.8% 46.1%;
 
-    --accent: 47 96% 53%; /* Vibrant Yellow for CTAs */
-    --accent-foreground: 240 10% 3.9%;
+    --accent: 25 95% 53%; /* Vibrant Orange for Highlights/CTAs */
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
-    --ring: 262 83% 58%;
+    --ring: 243 75% 59%;
 
     --radius: 1rem; /* Rounded corners (xl) */
 
     /* Custom gradients - Softened or Removed */
-    --gradient-primary: linear-gradient(135deg, hsl(262 83% 58%), hsl(262 83% 68%));
+    --gradient-primary: linear-gradient(135deg, hsl(243 75% 59%), hsl(243 75% 74%));
     /* --gradient-hero: linear-gradient(135deg, hsl(262 83% 58%), hsl(173 80% 40%)); Removed heavy gradient */
     --gradient-hero: none;
     --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(240 4.8% 97%));
@@ -52,7 +52,7 @@ All colors MUST be HSL.
     /* Shadows */
     --shadow-card: 0 2px 8px -2px hsl(240 10% 3.9% / 0.1);
     --shadow-elevated: 0 8px 24px -4px hsl(240 10% 3.9% / 0.15);
-    --shadow-glow: 0 0 32px hsl(262 83% 58% / 0.3);
+    --shadow-glow: 0 0 32px hsl(243 75% 59% / 0.3);
 
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -68,27 +68,27 @@ All colors MUST be HSL.
     --popover: 240 10% 7%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 262 83% 58%;
+    --primary: 243 75% 59%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 262 83% 68%;
+    --primary-glow: 243 75% 74%;
 
-    --secondary: 173 80% 40%;
+    --secondary: 25 95% 53%;
     --secondary-foreground: 0 0% 100%;
 
     --muted: 240 3.7% 15.9%;
     --muted-foreground: 240 5% 64.9%;
 
-    --accent: 47 96% 53%;
-    --accent-foreground: 240 10% 3.9%;
+    --accent: 25 95% 53%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
-    --ring: 262 83% 58%;
+    --ring: 243 75% 59%;
 
-    --gradient-hero: linear-gradient(135deg, hsl(262 83% 48%), hsl(173 70% 35%));
+    --gradient-hero: linear-gradient(135deg, hsl(243 75% 49%), hsl(25 85% 45%));
     --shadow-card: 0 2px 8px -2px hsl(0 0% 0% / 0.3);
   }
 }

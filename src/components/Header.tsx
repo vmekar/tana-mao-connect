@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Heart, MessageCircle, User, LogOut, List } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { Logo } from "@/components/Logo";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,11 +30,8 @@ export const Header = () => {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <div className="text-3xl">🤝</div>
-            <h1 className="text-2xl font-bold text-primary">
-              TanaMão
-            </h1>
+          <Link to="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
+            <Logo />
           </Link>
 
           {/* Desktop Navigation */}
@@ -104,7 +102,7 @@ export const Header = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
                 
-                <Button variant="default" className="hidden md:flex" asChild>
+                <Button variant="secondary" className="hidden md:flex font-semibold shadow-md hover:shadow-lg transition-all" asChild>
                   <Link to="/anunciar">Anunciar Grátis</Link>
                 </Button>
               </>
@@ -113,7 +111,7 @@ export const Header = () => {
                 <Button variant="ghost" asChild className="hidden md:flex">
                   <Link to="/auth">Entrar</Link>
                 </Button>
-                <Button variant="default" asChild className="hidden md:flex">
+                <Button variant="secondary" asChild className="hidden md:flex font-semibold shadow-md hover:shadow-lg transition-all">
                   <Link to="/auth">Cadastrar</Link>
                 </Button>
               </>
