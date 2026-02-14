@@ -14,6 +14,7 @@ import MyAds from "./pages/MyAds";
 import Profile from "./pages/Profile";
 import Inbox from "./pages/Inbox";
 import Favorites from "./pages/Favorites";
+import { BottomNav } from "@/components/BottomNav";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <BottomNav />
         </BrowserRouter>
       </AuthProvider>
     </TooltipProvider>
