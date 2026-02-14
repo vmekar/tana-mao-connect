@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useNavigate, useParams } from "react-router-dom";
 import { listingService } from "@/services/listingService";
+import { locationService, State, City } from "@/services/locationService";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -66,6 +67,12 @@ const CreateListing = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(!!id);
 
+  // Location state
+  const [states, setStates] = useState<State[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
+  const [selectedState, setSelectedState] = useState<string>("");
+  const [selectedCity, setSelectedCity] = useState<string>("");
+
   // Manage images: both existing URLs and new Files
   const [images, setImages] = useState<ImageItem[]>([]);
 
@@ -81,6 +88,18 @@ const CreateListing = () => {
       category: "",
     },
   });
+
+  useEffect(() => {
+    locationService.fetchStates().then(setStates);
+  }, []);
+
+  useEffect(() => {
+    if (selectedState) {
+      locationService.fetchCities(selectedState).then(setCities);
+    } else {
+      setCities([]);
+    }
+  }, [selectedState]);
 
   useEffect(() => {
     const fetchListing = async () => {
@@ -108,6 +127,16 @@ const CreateListing = () => {
           });
           navigate("/");
           return;
+        }
+
+        // Parse location
+        if (listing.location) {
+          const parts = listing.location.split(" - ");
+          if (parts.length === 2) {
+            const [city, uf] = parts;
+            setSelectedState(uf);
+            setSelectedCity(city);
+          }
         }
 
         // Populate form
@@ -338,19 +367,74 @@ const CreateListing = () => {
                 <p className="text-sm text-muted-foreground">Adicione até 5 fotos. A primeira será a principal.</p>
               </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormItem>
+                  <FormLabel>Estado (UF)</FormLabel>
+                  <Select
+                    onValueChange={(val) => {
+                      setSelectedState(val);
+                      setSelectedCity(""); // Reset city when state changes
+                      form.setValue("location", ""); // Reset location until city is selected
+                    }}
+                    value={selectedState}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o Estado" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {states.map((state) => (
+                        <SelectItem key={state.id} value={state.sigla}>
+                          {state.sigla} - {state.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+
+                <FormItem>
+                  <FormLabel>Cidade</FormLabel>
+                  <Select
+                    onValueChange={(val) => {
+                      setSelectedCity(val);
+                      form.setValue("location", `${val} - ${selectedState}`, { shouldValidate: true });
+                    }}
+                    value={selectedCity}
+                    disabled={!selectedState}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a Cidade" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {cities.map((city) => (
+                        <SelectItem key={city.id} value={city.nome}>
+                          {city.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              </div>
+
+              {/* Hidden field for validation */}
               <FormField
                 control={form.control}
                 name="location"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Localização (Bairro/Cidade)</FormLabel>
+                  <FormItem className="hidden">
                     <FormControl>
-                      <Input placeholder="Ex: Pinheiros, São Paulo" {...field} />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              {form.formState.errors.location && (
+                  <p className="text-sm font-medium text-destructive">{form.formState.errors.location.message}</p>
+              )}
 
               <div className="flex justify-end gap-4 pt-4">
                 <Button type="button" variant="outline" onClick={() => navigate(-1)} disabled={isLoading}>
