@@ -1,32 +1,7 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search, ChevronLeft, ChevronRight, MapPin, Crosshair } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 
 export const HeroCarousel = () => {
-  const [query, setQuery] = useState("");
-  const [location, setLocation] = useState("");
-  const navigate = useNavigate();
-
-  const handleSearch = () => {
-    const params = new URLSearchParams();
-    if (query.trim()) {
-      params.append('query', query.trim());
-    }
-    if (location.trim()) {
-      params.append('location', location.trim());
-    }
-    const queryString = params.toString();
-    navigate(queryString ? `/search?${queryString}` : '/search');
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
-  };
-
   const slides = [
     {
       id: 1,
@@ -60,9 +35,9 @@ export const HeroCarousel = () => {
   }, [slides.length]);
 
   return (
-    <section className="w-full bg-background pb-0 h-[300px] md:h-[320px]">
+    <section className="w-full bg-background pb-0 h-[260px] md:h-[280px]">
       {/* Carousel Banner Container */}
-      <div className="relative w-full h-[300px] md:h-[320px] max-h-[300px] md:max-h-[320px] overflow-hidden group bg-[#1a1a2e]">
+      <div className="relative w-full h-[260px] md:h-[280px] max-h-[260px] md:max-h-[280px] overflow-hidden group bg-[#1a1a2e]">
         <div
           className="flex transition-transform duration-500 ease-in-out h-full"
           style={{ transform: `translateX(-${currentSlide * 100}%)` }}
@@ -111,78 +86,6 @@ export const HeroCarousel = () => {
               aria-label={`Go to slide ${index + 1}`}
             />
           ))}
-        </div>
-      </div>
-
-      {/* Floating Search Bar */}
-      <div className="absolute inset-0 flex flex-col items-center justify-end pb-16 text-white px-4 z-20 pointer-events-none">
-        <div className="max-w-4xl mx-auto bg-card p-3 md:p-4 rounded-xl shadow-elevated border border-border flex flex-col md:flex-row gap-3 items-center pointer-events-auto text-foreground">
-          <div className="flex-1 flex flex-col md:flex-row w-full gap-3 md:gap-0">
-            <div className="flex-1 flex items-center w-full bg-muted/50 rounded-lg md:rounded-r-none md:rounded-l-lg px-4 h-12 border border-border/50 hover:border-border transition-colors md:border-r-0">
-              <Search className="h-5 w-5 text-muted-foreground mr-3" />
-              <Input
-                type="text"
-                placeholder="O que você está procurando?"
-                className="flex-1 border-0 bg-transparent text-base focus-visible:ring-0 p-0 placeholder:text-muted-foreground"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={handleKeyDown}
-              />
-            </div>
-            <div className="w-full md:w-[250px] lg:w-[300px] flex items-center bg-muted/50 rounded-lg md:rounded-l-none md:rounded-r-lg px-4 h-12 border border-border/50 hover:border-border transition-colors relative md:border-l-0">
-              <MapPin className="h-5 w-5 text-muted-foreground mr-3" />
-              <Input
-                type="text"
-                placeholder="Buscar em Rio de Janeiro, RJ..."
-                className="flex-1 border-0 bg-transparent text-base focus-visible:ring-0 p-0 placeholder:text-muted-foreground pr-8"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                onKeyDown={handleKeyDown}
-              />
-              <button
-                className="absolute right-3 p-1 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors"
-                title="Usar minha localização"
-                onClick={() => {
-                  if ("geolocation" in navigator) {
-                    navigator.geolocation.getCurrentPosition(
-                      async (position) => {
-                        try {
-                          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`, {
-                            headers: {
-                              "User-Agent": "TemRolo/1.0",
-                              "Accept-Language": "pt-BR"
-                            }
-                          });
-                          const data = await res.json();
-                          if (data && data.address) {
-                            const city = data.address.city || data.address.town || data.address.village;
-                            const state = data.address.state;
-                            if (city && state) {
-                                setLocation(`${city}, ${state}`);
-                            } else if (city || state) {
-                                setLocation(city || state);
-                            } else {
-                                setLocation("Localização encontrada");
-                            }
-                          }
-                        } catch (error) {
-                          console.error("Error fetching location data:", error);
-                        }
-                      },
-                      (error) => {
-                        console.error("Error getting location:", error);
-                      }
-                    );
-                  }
-                }}
-              >
-                <Crosshair className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-          <Button size="lg" className="w-full md:w-auto h-12 px-8 font-semibold rounded-lg shrink-0" onClick={handleSearch}>
-            Buscar
-          </Button>
         </div>
       </div>
     </section>
