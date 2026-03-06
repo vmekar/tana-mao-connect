@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -24,7 +24,7 @@ export const HeroCarousel = () => {
     {
       id: 1,
       image: "https://images.unsplash.com/photo-1555529771-835f59bfc50c?q=80&w=1200&auto=format&fit=crop",
-      title: "As melhores ofertas estão aqui",
+      title: "Oportunidades imperdíveis esperam por você",
       subtitle: "Compre e venda de forma rápida e segura.",
     },
     {
@@ -43,18 +43,19 @@ export const HeroCarousel = () => {
 
   const [currentSlide, setCurrentSlide] = useState(0);
 
+  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % slides.length);
+  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+
   // Simplified auto-scroll for presentation
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5000);
+    const timer = setInterval(nextSlide, 5000);
     return () => clearInterval(timer);
   }, [slides.length]);
 
   return (
-    <section className="w-full bg-background pb-0">
+    <section className="w-full bg-background pb-0 h-[300px] md:h-[450px]">
       {/* Carousel Banner Container */}
-      <div className="relative w-full h-[300px] md:h-[450px] max-h-[300px] md:max-h-[450px] overflow-hidden group bg-[#1a1a2e]">
+      <div className="relative w-full h-full max-h-[300px] md:max-h-[450px] overflow-hidden group bg-[#1a1a2e]">
         <div
           className="flex transition-transform duration-500 ease-in-out h-full"
           style={{ transform: `translateX(-${currentSlide * 100}%)` }}
@@ -66,7 +67,7 @@ export const HeroCarousel = () => {
                 alt=""
                 className="w-full h-full object-cover object-center"
               />
-              <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5))]" />
+              <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5))' }} />
             </div>
           ))}
         </div>
@@ -101,14 +102,30 @@ export const HeroCarousel = () => {
           </div>
         </div>
 
+        {/* Navigation Arrows */}
+        <button
+          onClick={prevSlide}
+          className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full z-30 pointer-events-auto transition-colors"
+          aria-label="Previous slide"
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </button>
+        <button
+          onClick={nextSlide}
+          className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full z-30 pointer-events-auto transition-colors"
+          aria-label="Next slide"
+        >
+          <ChevronRight className="w-6 h-6" />
+        </button>
+
         {/* Carousel Indicators */}
-        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-30 pointer-events-auto">
+        <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-2 z-30 pointer-events-auto">
           {slides.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentSlide(index)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                index === currentSlide ? "bg-white w-6" : "bg-white/50"
+              className={`h-2 rounded-full transition-all ${
+                index === currentSlide ? "bg-white w-8" : "bg-white/50 w-4"
               }`}
               aria-label={`Go to slide ${index + 1}`}
             />
