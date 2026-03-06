@@ -41,4 +41,33 @@ export const locationService = {
       return [];
     }
   },
+
+  async fetchBairros(municipioId: number): Promise<string[]> {
+    if (!municipioId) return [];
+    try {
+      const [distritosRes, subdistritosRes] = await Promise.all([
+        fetch(`${IBGE_API_BASE}/municipios/${municipioId}/distritos`),
+        fetch(`${IBGE_API_BASE}/municipios/${municipioId}/subdistritos`)
+      ]);
+
+      let distritos = [];
+      let subdistritos = [];
+
+      if (distritosRes.ok) distritos = await distritosRes.json();
+      if (subdistritosRes.ok) subdistritos = await subdistritosRes.json();
+
+      let bairros: { nome: string }[] = [];
+      if (subdistritos && subdistritos.length > 0) {
+        bairros = subdistritos;
+      } else if (distritos && distritos.length > 0) {
+        bairros = distritos;
+      }
+
+      const nomes = bairros.map((b) => b.nome).filter((nome: string, index: number, self: string[]) => self.indexOf(nome) === index).sort();
+      return nomes;
+    } catch (error) {
+      console.error("Error fetching bairros:", error);
+      return [];
+    }
+  },
 };

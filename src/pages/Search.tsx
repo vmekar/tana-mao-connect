@@ -18,9 +18,11 @@ const Search = () => {
   const filters: SearchFilters = useMemo(() => ({
     query: searchParams.get("query") || undefined,
     category: searchParams.get("category") || undefined,
+    subcategory: searchParams.get("subcategory") || undefined,
     minPrice: searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : undefined,
     maxPrice: searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined,
     location: searchParams.get("location") || undefined,
+    bairros: searchParams.getAll("bairros").length > 0 ? searchParams.getAll("bairros") : undefined,
   }), [searchParams]);
 
   useEffect(() => {
@@ -43,9 +45,13 @@ const Search = () => {
     const params = new URLSearchParams();
     if (newFilters.query) params.set("query", newFilters.query);
     if (newFilters.category) params.set("category", newFilters.category);
+    if (newFilters.subcategory) params.set("subcategory", newFilters.subcategory);
     if (newFilters.minPrice) params.set("minPrice", newFilters.minPrice.toString());
     if (newFilters.maxPrice) params.set("maxPrice", newFilters.maxPrice.toString());
     if (newFilters.location) params.set("location", newFilters.location);
+    if (newFilters.bairros && newFilters.bairros.length > 0) {
+      newFilters.bairros.forEach((bairro) => params.append("bairros", bairro));
+    }
 
     setSearchParams(params);
   };
