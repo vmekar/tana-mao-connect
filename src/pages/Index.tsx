@@ -1,7 +1,7 @@
 import { Header } from "@/components/Header";
-import { Hero } from "@/components/Hero";
-import { CategoryGrid } from "@/components/CategoryGrid";
-import { FeaturedListings } from "@/components/FeaturedListings";
+import { HeroCarousel } from "@/components/HeroCarousel";
+import { NavigationPills } from "@/components/NavigationPills";
+import { HorizontalAdList } from "@/components/HorizontalAdList";
 import { Footer } from "@/components/Footer";
 
 const Index = () => {
@@ -9,9 +9,9 @@ const Index = () => {
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1">
-        <Hero />
-        <CategoryGrid />
-        <FeaturedListings />
+        <HeroCarousel />
+        <NavigationPills />
+        <HorizontalAdList />
       </main>
       <Footer />
     </div>

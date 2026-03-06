@@ -4,7 +4,7 @@ import { favoriteService } from "@/services/favoriteService";
 import { Listing } from "@/types/listing";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { ListingCard } from "@/components/ListingCard";
+import { AdCard } from "@/components/AdCard";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -80,7 +80,7 @@ const Favorites = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {favorites.map((listing) => (
               <Link key={listing.id} to={`/listing/${listing.id}`}>
-                <ListingCard
+                <AdCard
                   id={listing.id}
                   title={listing.title}
                   price={listing.price}

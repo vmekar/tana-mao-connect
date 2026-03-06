@@ -4,17 +4,17 @@ import { Badge } from "@/components/ui/badge";
 import { MapPin, Clock } from "lucide-react";
 import { FavoriteButton } from "@/components/FavoriteButton";
 
-interface ListingCardProps {
+interface AdCardProps {
   id: string;
   title: string;
   price: number;
   image: string;
   location: string;
-  timeAgo: string;
+  timeAgo: string; // Used as date context for the prompt requirement
   isFeatured?: boolean;
 }
 
-export const ListingCard = ({
+export const AdCard = ({
   id,
   title,
   price,
@@ -22,9 +22,9 @@ export const ListingCard = ({
   location,
   timeAgo,
   isFeatured,
-}: ListingCardProps) => {
+}: AdCardProps) => {
   return (
-    <Card className="group relative overflow-hidden rounded-xl border-0 shadow-sm hover:shadow-md transition-all duration-300 bg-card">
+    <Card className="group relative overflow-hidden rounded-xl border-0 shadow-sm hover:shadow-md transition-all duration-300 bg-card h-full flex flex-col">
       <Link to={`/listing/${id}`} className="block h-full">
         {/* Image */}
         <div className="relative aspect-[4/3] overflow-hidden bg-muted">
@@ -41,8 +41,8 @@ export const ListingCard = ({
         </div>
 
         {/* Content */}
-        <div className="p-4">
-          <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+        <div className="p-4 flex-1 flex flex-col">
+          <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors flex-1">
             {title}
           </h3>
 
@@ -50,14 +50,14 @@ export const ListingCard = ({
             R$ {price.toLocaleString('pt-BR')}
           </div>
 
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <div className="flex items-center justify-between text-sm text-muted-foreground mt-auto">
             <div className="flex items-center gap-1">
-              <MapPin className="w-4 h-4" />
+              <MapPin className="w-4 h-4 shrink-0" />
               <span className="line-clamp-1">{location}</span>
             </div>
-            <div className="flex items-center gap-1">
-              <Clock className="w-4 h-4" />
-              <span>{timeAgo}</span>
+            <div className="flex items-center gap-1 shrink-0">
+              <Clock className="w-4 h-4 shrink-0" />
+              <span className="truncate max-w-[80px]" title={timeAgo}>{timeAgo}</span>
             </div>
           </div>
         </div>

@@ -4,7 +4,7 @@ import { listingService } from "@/services/listingService";
 import { Listing, SearchFilters } from "@/types/listing";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { ListingCard } from "@/components/ListingCard";
+import { AdCard } from "@/components/AdCard";
 import { SearchFilters as SearchFiltersComponent } from "@/components/SearchFilters";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -77,7 +77,7 @@ const Search = () => {
             ) : listings.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {listings.map((listing) => (
-                  <ListingCard
+                  <AdCard
                     key={listing.id}
                     id={listing.id}
                     title={listing.title}

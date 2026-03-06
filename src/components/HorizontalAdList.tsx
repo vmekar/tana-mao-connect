@@ -2,14 +2,14 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ListingCard } from "./ListingCard";
+import { AdCard } from "./AdCard";
 import { listingService } from "@/services/listingService";
 import { Listing } from "@/types/listing";
 import { Map, Grid, List } from "lucide-react";
 import { Button } from "./ui/button";
 import { ListingsMap } from "./ListingsMap";
 
-export const FeaturedListings = () => {
+export const HorizontalAdList = () => {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
@@ -76,10 +76,10 @@ export const FeaturedListings = () => {
       </div>
 
       {viewMode === "list" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="flex overflow-x-auto gap-6 pb-6 pt-2 snap-x snap-mandatory hide-scrollbar animate-in fade-in slide-in-from-bottom-4 duration-500">
           {listings.map((listing) => (
-            <Link key={listing.id} to={`/listing/${listing.id}`}>
-              <ListingCard
+            <Link key={listing.id} to={`/listing/${listing.id}`} className="snap-start shrink-0 w-[280px] sm:w-[320px]">
+              <AdCard
                 id={listing.id}
                 title={listing.title}
                 price={listing.price}
