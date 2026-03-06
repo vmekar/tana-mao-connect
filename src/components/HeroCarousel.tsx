@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 export const HeroCarousel = () => {
   const slides = [
@@ -25,14 +25,14 @@ export const HeroCarousel = () => {
 
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % slides.length);
+  const nextSlide = useCallback(() => setCurrentSlide((prev) => (prev + 1) % slides.length), [slides.length]);
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
 
   // Simplified auto-scroll for presentation
   useEffect(() => {
     const timer = setInterval(nextSlide, 5000);
     return () => clearInterval(timer);
-  }, [slides.length]);
+  }, [nextSlide]);
 
   return (
     <section className="w-full bg-background pb-0 h-[260px] md:h-[280px]">

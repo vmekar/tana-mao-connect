@@ -69,7 +69,7 @@ export const SearchFilters = ({ initialFilters, onFilterChange }: SearchFiltersP
     if (category !== initialFilters.category) {
       setSubcategory("");
     }
-  }, [category]);
+  }, [category, initialFilters.category]);
 
   useEffect(() => {
     if (selectedState && selectedState !== "all") {
@@ -106,7 +106,7 @@ export const SearchFilters = ({ initialFilters, onFilterChange }: SearchFiltersP
     } else {
         setSelectedBairros([]);
     }
-  }, [selectedCity, cities]);
+  }, [selectedCity, cities, initialFilters.location]);
 
   useEffect(() => {
     if (initialFilters.location) {
