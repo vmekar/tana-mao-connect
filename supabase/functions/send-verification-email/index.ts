@@ -29,9 +29,9 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "TanaMão <onboarding@resend.dev>",
+        from: "Temrolo <onboarding@resend.dev>",
         to: [email],
-        subject: "Verifique sua conta no TanaMão",
+        subject: "Verifique sua conta no Temrolo",
         html: `
           <!DOCTYPE html>
           <html>
@@ -43,7 +43,7 @@ const handler = async (req: Request): Promise<Response> => {
               <div style="max-width: 480px; margin: 0 auto; background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                 <div style="text-align: center; margin-bottom: 32px;">
                   <span style="font-size: 48px;">🤝</span>
-                  <h1 style="color: #7c3aed; margin: 16px 0 0; font-size: 28px;">TanaMão</h1>
+                  <h1 style="color: #7c3aed; margin: 16px 0 0; font-size: 28px;">Temrolo</h1>
                 </div>
                 
                 <h2 style="color: #18181b; font-size: 20px; margin-bottom: 16px;">
@@ -51,7 +51,7 @@ const handler = async (req: Request): Promise<Response> => {
                 </h2>
                 
                 <p style="color: #52525b; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
-                  Obrigado por se cadastrar no TanaMão! Para ativar sua conta e começar a ajudar ou receber ajuda, clique no botão abaixo:
+                  Obrigado por se cadastrar no Temrolo! Para ativar sua conta e começar a ajudar ou receber ajuda, clique no botão abaixo:
                 </p>
                 
                 <div style="text-align: center; margin: 32px 0;">
@@ -61,13 +61,13 @@ const handler = async (req: Request): Promise<Response> => {
                 </div>
                 
                 <p style="color: #a1a1aa; font-size: 14px; line-height: 1.5; margin-top: 32px;">
-                  Se você não criou uma conta no TanaMão, pode ignorar este email com segurança.
+                  Se você não criou uma conta no Temrolo, pode ignorar este email com segurança.
                 </p>
                 
                 <hr style="border: none; border-top: 1px solid #e4e4e7; margin: 32px 0;">
                 
                 <p style="color: #a1a1aa; font-size: 12px; text-align: center;">
-                  © ${new Date().getFullYear()} TanaMão. Conectando quem precisa com quem pode ajudar.
+                  © ${new Date().getFullYear()} Temrolo. Conectando quem precisa com quem pode ajudar.
                 </p>
               </div>
             </body>

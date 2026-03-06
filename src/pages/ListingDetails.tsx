@@ -83,7 +83,7 @@ const ListingDetails = () => {
 
   const handleWhatsAppClick = () => {
     if (sellerProfile?.phone) {
-      const message = `Olá! Vi seu anúncio "${listing?.title}" no TanaMão e gostaria de saber mais.`;
+      const message = `Olá! Vi seu anúncio "${listing?.title}" no Temrolo e gostaria de saber mais.`;
       const url = `https://wa.me/${sellerProfile.phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
       window.open(url, '_blank');
     }
