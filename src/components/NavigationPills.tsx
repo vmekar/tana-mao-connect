@@ -29,25 +29,28 @@ const categories = [
   { id: 12, name: "Serviços", icon: Wrench, color: "bg-cyan-100 text-cyan-600" },
 ];
 
-export const CategoryGrid = () => {
+export const NavigationPills = () => {
   return (
-    <section className="container mx-auto px-4 py-16">
-      <h2 className="text-3xl font-bold text-center mb-4">
-        Explore por Categoria
+    <section className="container mx-auto px-4 py-8">
+      <h2 className="text-2xl font-bold mb-6 text-foreground">
+        Categorias Populares
       </h2>
-      <p className="text-center text-muted-foreground mb-12">
-        Encontre exatamente o que você precisa
-      </p>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6 md:gap-8">
+      <div className="flex overflow-x-auto pb-4 gap-4 snap-x snap-mandatory hide-scrollbar">
         {categories.map((category) => {
           const Icon = category.icon;
           return (
-            <Link key={category.id} to={`/search?category=${category.name}`} className="group flex flex-col items-center gap-4 p-4 rounded-xl hover:bg-muted/50 transition-all duration-300">
-              <div className={`w-20 h-20 rounded-full ${category.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-sm`}>
-                <Icon className="w-9 h-9" />
+            <Link
+              key={category.id}
+              to={`/search?category=${category.name}`}
+              className="group flex flex-col md:flex-row items-center gap-3 p-3 md:pr-6 rounded-full bg-card hover:bg-muted transition-all duration-300 border shadow-sm shrink-0 snap-start min-w-[100px] md:min-w-[180px]"
+            >
+              <div className={`w-12 h-12 rounded-full ${category.color} flex items-center justify-center group-hover:scale-105 transition-transform duration-300`}>
+                <Icon className="w-6 h-6" />
               </div>
-              <span className="text-base font-medium text-center text-foreground/80 group-hover:text-primary transition-colors">{category.name}</span>
+              <span className="text-sm font-semibold text-center md:text-left text-foreground/80 group-hover:text-primary transition-colors whitespace-nowrap">
+                {category.name}
+              </span>
             </Link>
           );
         })}
