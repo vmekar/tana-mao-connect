@@ -54,10 +54,19 @@ export const HorizontalAdList = () => {
 
   if (loading) {
     return (
-      <section className="container mx-auto px-4 py-16 bg-muted/30">
-        <h2 className="text-3xl md:text-4xl font-heading font-black text-center mb-4">
-          Anúncios em Destaque
-        </h2>
+      <section className="container mx-auto px-4 pt-4 pb-16 bg-muted/30">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+          <div className="flex flex-col items-start text-left">
+            <h2 className="text-2xl md:text-3xl font-heading font-black mb-1 text-foreground">
+              Anúncios em Destaque
+            </h2>
+            <p className="text-muted-foreground text-sm">
+              Encontre o que precisa perto de você
+            </p>
+          </div>
+          {/* Toggle View Skeleton */}
+          <div className="flex items-center gap-2 bg-background p-1 rounded-lg border shadow-sm w-[150px] h-10 opacity-50"></div>
+        </div>
         <div className="flex justify-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
@@ -66,14 +75,16 @@ export const HorizontalAdList = () => {
   }
 
   return (
-    <section className="container mx-auto px-4 py-16 bg-muted/30">
-      <div className="flex flex-col items-center mb-8">
-        <h2 className="text-3xl md:text-4xl font-heading font-black text-center mb-4">
-          Anúncios em Destaque
-        </h2>
-        <p className="text-center text-muted-foreground mb-6">
-          Encontre o que precisa perto de você
-        </p>
+    <section className="container mx-auto px-4 pt-4 pb-16 bg-muted/30">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+        <div className="flex flex-col items-start text-left">
+          <h2 className="text-2xl md:text-3xl font-heading font-black mb-1 text-foreground">
+            Anúncios em Destaque
+          </h2>
+          <p className="text-muted-foreground text-sm">
+            Encontre o que precisa perto de você
+          </p>
+        </div>
 
         {/* Toggle View */}
         <div className="flex items-center gap-2 bg-background p-1 rounded-lg border shadow-sm">
