@@ -1,4 +1,9 @@
-import { CreateListingDTO, Listing, ListingStatus, SearchFilters } from "@/types/listing";
+import {
+  CreateListingDTO,
+  Listing,
+  ListingStatus,
+  SearchFilters,
+} from "@/types/listing";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ListingRow {
@@ -16,167 +21,127 @@ interface ListingRow {
   updated_at: string;
 }
 
+const mapRowToListing = (item: ListingRow): Listing => ({
+  id: item.id,
+  title: item.title,
+  description: item.description || undefined,
+  price: item.price,
+  category: item.category,
+  location: item.location,
+  images: item.images || [],
+  userId: item.user_id,
+  status: item.status as ListingStatus,
+  isFeatured: item.is_featured,
+  createdAt: item.created_at,
+  updatedAt: item.updated_at,
+});
+
 export const listingService = {
   async fetchFeatured(): Promise<Listing[]> {
     const { data, error } = await supabase
-      .from('listings')
-      .select('*')
-      .eq('status', 'active')
-      .order('is_featured', { ascending: false })
-      .order('created_at', { ascending: false })
+      .from("listings")
+      .select("*")
+      .eq("status", "active")
+      .order("is_featured", { ascending: false })
+      .order("created_at", { ascending: false })
       .limit(8);
 
     if (error) {
-      console.error('Error fetching featured listings:', error);
+      console.error("Error fetching featured listings:", error);
       throw error;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (data as any[]).map((item: ListingRow) => ({
-      id: item.id,
-      title: item.title,
-      description: item.description || undefined,
-      price: item.price,
-      category: item.category,
-      location: item.location,
-      images: item.images || [],
-      userId: item.user_id,
-      status: item.status as ListingStatus,
-      isFeatured: item.is_featured,
-      createdAt: item.created_at,
-      updatedAt: item.updated_at,
-    }));
+    return (data as unknown as ListingRow[]).map(mapRowToListing);
   },
 
   async fetchDetails(id: string): Promise<Listing | null> {
     const { data, error } = await supabase
-      .from('listings')
-      .select('*')
-      .eq('id', id)
+      .from("listings")
+      .select("*")
+      .eq("id", id)
       .single();
 
     if (error) {
-      console.error('Error fetching listing details:', error);
+      console.error("Error fetching listing details:", error);
       return null;
     }
 
     const item = data as unknown as ListingRow;
 
-    return {
-      id: item.id,
-      title: item.title,
-      description: item.description || undefined,
-      price: item.price,
-      category: item.category,
-      location: item.location,
-      images: item.images || [],
-      userId: item.user_id,
-      status: item.status as ListingStatus,
-      isFeatured: item.is_featured,
-      createdAt: item.created_at,
-      updatedAt: item.updated_at,
-    };
+    return mapRowToListing(item);
   },
 
   async searchListings(filters: SearchFilters): Promise<Listing[]> {
     let query = supabase
-      .from('listings')
-      .select('*')
-      .eq('status', 'active')
-      .order('created_at', { ascending: false });
+      .from("listings")
+      .select("*")
+      .eq("status", "active")
+      .order("created_at", { ascending: false });
 
     if (filters.query) {
-      query = query.ilike('title', `%${filters.query}%`);
+      query = query.ilike("title", `%${filters.query}%`);
     }
 
     if (filters.category) {
-      query = query.eq('category', filters.category);
+      query = query.eq("category", filters.category);
     }
 
     if (filters.subcategory) {
       // Assuming a 'subcategory' column might exist or will be added
       // If it doesn't exist, this will gracefully return an error or skip results
-      query = query.eq('subcategory', filters.subcategory);
+      query = query.eq("subcategory", filters.subcategory);
     }
 
     if (filters.location) {
-      query = query.ilike('location', `%${filters.location}%`);
+      query = query.ilike("location", `%${filters.location}%`);
     }
 
     if (filters.bairros && filters.bairros.length > 0) {
       // Depending on db schema, if bairros are stored in a 'bairro' column
       // we can do an 'in' query.
-      query = query.in('bairro', filters.bairros);
+      query = query.in("bairro", filters.bairros);
     }
 
     if (filters.minPrice !== undefined) {
-      query = query.gte('price', filters.minPrice);
+      query = query.gte("price", filters.minPrice);
     }
 
     if (filters.maxPrice !== undefined) {
-      query = query.lte('price', filters.maxPrice);
+      query = query.lte("price", filters.maxPrice);
     }
 
     const { data, error } = await query;
 
     if (error) {
-      console.error('Error searching listings:', error);
+      console.error("Error searching listings:", error);
       throw error;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (data as any[]).map((item: ListingRow) => ({
-      id: item.id,
-      title: item.title,
-      description: item.description || undefined,
-      price: item.price,
-      category: item.category,
-      location: item.location,
-      images: item.images || [],
-      userId: item.user_id,
-      status: item.status as ListingStatus,
-      isFeatured: item.is_featured,
-      createdAt: item.created_at,
-      updatedAt: item.updated_at,
-    }));
+    return (data as unknown as ListingRow[]).map(mapRowToListing);
   },
 
   async fetchUserListings(userId: string): Promise<Listing[]> {
     const { data, error } = await supabase
-      .from('listings')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+      .from("listings")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
 
     if (error) {
-      console.error('Error fetching user listings:', error);
+      console.error("Error fetching user listings:", error);
       throw error;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (data as any[]).map((item: ListingRow) => ({
-      id: item.id,
-      title: item.title,
-      description: item.description || undefined,
-      price: item.price,
-      category: item.category,
-      location: item.location,
-      images: item.images || [],
-      userId: item.user_id,
-      status: item.status as ListingStatus,
-      isFeatured: item.is_featured,
-      createdAt: item.created_at,
-      updatedAt: item.updated_at,
-    }));
+    return (data as unknown as ListingRow[]).map(mapRowToListing);
   },
 
   async uploadListingImage(file: File): Promise<string> {
-    const fileExt = file.name.split('.').pop();
+    const fileExt = file.name.split(".").pop();
     const fileName = `${crypto.randomUUID()}.${fileExt}`;
     const filePath = `${fileName}`;
 
     const { error: uploadError } = await supabase.storage
-      .from('listing-images')
+      .from("listing-images")
       .upload(filePath, file);
 
     if (uploadError) {
@@ -184,7 +149,7 @@ export const listingService = {
     }
 
     const { data } = supabase.storage
-      .from('listing-images')
+      .from("listing-images")
       .getPublicUrl(filePath);
 
     return data.publicUrl;
@@ -193,47 +158,48 @@ export const listingService = {
   async deleteListing(id: string, imageUrls: string[]): Promise<void> {
     // Delete images from storage first
     if (imageUrls && imageUrls.length > 0) {
-      const paths = imageUrls.map((url) => {
-        try {
+      const paths = imageUrls
+        .map((url) => {
+          try {
             const urlObj = new URL(url);
             // Path is typically /storage/v1/object/public/listing-images/<filename>
-            const pathParts = urlObj.pathname.split('/');
+            const pathParts = urlObj.pathname.split("/");
             return pathParts[pathParts.length - 1]; // filename
-        } catch (e) {
+          } catch (e) {
             console.error("Error parsing URL for deletion", url);
             return null;
-        }
-      }).filter(Boolean) as string[];
+          }
+        })
+        .filter(Boolean) as string[];
 
       if (paths.length > 0) {
         const { error: storageError } = await supabase.storage
-            .from('listing-images')
-            .remove(paths);
-        
+          .from("listing-images")
+          .remove(paths);
+
         if (storageError) {
-            console.error('Error deleting images:', storageError);
+          console.error("Error deleting images:", storageError);
         }
       }
     }
 
-    const { error } = await supabase
-      .from('listings')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from("listings").delete().eq("id", id);
 
     if (error) {
-      console.error('Error deleting listing:', error);
+      console.error("Error deleting listing:", error);
       throw error;
     }
   },
 
   async createListing(listing: CreateListingDTO): Promise<Listing> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    if (!user) throw new Error('User not authenticated');
+    if (!user) throw new Error("User not authenticated");
 
     const { data, error } = await supabase
-      .from('listings')
+      .from("listings")
       .insert({
         title: listing.title,
         description: listing.description,
@@ -250,29 +216,18 @@ export const listingService = {
 
     const item = data as unknown as ListingRow;
 
-    return {
-      id: item.id,
-      title: item.title,
-      description: item.description || undefined,
-      price: item.price,
-      category: item.category,
-      location: item.location,
-      images: item.images || [],
-      userId: item.user_id,
-      status: item.status as ListingStatus,
-      isFeatured: item.is_featured,
-      createdAt: item.created_at,
-      updatedAt: item.updated_at,
-    };
+    return mapRowToListing(item);
   },
 
   async updateListing(id: string, listing: CreateListingDTO): Promise<Listing> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    if (!user) throw new Error('User not authenticated');
+    if (!user) throw new Error("User not authenticated");
 
     const { data, error } = await supabase
-      .from('listings')
+      .from("listings")
       .update({
         title: listing.title,
         description: listing.description,
@@ -282,8 +237,8 @@ export const listingService = {
         images: listing.images,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', id)
-      .eq('user_id', user.id)
+      .eq("id", id)
+      .eq("user_id", user.id)
       .select()
       .single();
 
@@ -291,19 +246,6 @@ export const listingService = {
 
     const item = data as unknown as ListingRow;
 
-    return {
-      id: item.id,
-      title: item.title,
-      description: item.description || undefined,
-      price: item.price,
-      category: item.category,
-      location: item.location,
-      images: item.images || [],
-      userId: item.user_id,
-      status: item.status as ListingStatus,
-      isFeatured: item.is_featured,
-      createdAt: item.created_at,
-      updatedAt: item.updated_at,
-    };
+    return mapRowToListing(item);
   },
 };
