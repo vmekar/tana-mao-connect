@@ -28,6 +28,9 @@ interface ListingWithCoords extends Listing {
   coords: [number, number];
 }
 
+// Module-level cache to persist geocoding results across re-renders and component mounts
+const globalGeocodeCache: Record<string, [number, number]> = {};
+
 function FitBounds({ markers }: { markers: ListingWithCoords[] }) {
   const map = useMap();
 
@@ -46,46 +49,50 @@ export const ListingsMap = ({ listings }: ListingsMapProps) => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchCoordinates = async () => {
       setLoading(true);
-      const newMarkers: ListingWithCoords[] = [];
-      const cache: Record<string, [number, number]> = {};
 
       const validListings = listings.filter((l) => l.location && l.location.length > 3);
+      const uniqueLocations = Array.from(new Set(validListings.map((l) => l.location)));
+      const locationsToFetch = uniqueLocations.filter((loc) => !globalGeocodeCache[loc]);
 
-      for (const listing of validListings) {
-        if (cache[listing.location]) {
-          const [lat, lon] = cache[listing.location];
+      // Fetch missing locations in parallel with staggered starts to respect Nominatim rate limit
+      await Promise.all(
+        locationsToFetch.map(async (location, index) => {
+          try {
+            await new Promise((resolve) => setTimeout(resolve, index * 300));
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+                location
+              )}&limit=1`
+            );
+            const data = await response.json();
+            if (data && data.length > 0) {
+              const lat = parseFloat(data[0].lat);
+              const lon = parseFloat(data[0].lon);
+              globalGeocodeCache[location] = [lat, lon];
+            }
+          } catch (error) {
+            console.error(`Failed to geocode ${location}`, error);
+          }
+        })
+      );
+
+      if (!isMounted) return;
+
+      const newMarkers: ListingWithCoords[] = validListings.map((listing) => {
+        const coords = globalGeocodeCache[listing.location];
+        if (coords) {
+          const [lat, lon] = coords;
           const jitterLat = (Math.random() - 0.5) * 0.005;
           const jitterLon = (Math.random() - 0.5) * 0.005;
-          newMarkers.push({ ...listing, coords: [lat + jitterLat, lon + jitterLon] });
-          continue;
+          return { ...listing, coords: [lat + jitterLat, lon + jitterLon] as [number, number] };
         }
+        return null;
+      }).filter(Boolean) as ListingWithCoords[];
 
-        try {
-          // Delay to respect rate limits
-          await new Promise((resolve) => setTimeout(resolve, 300));
-
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-              listing.location
-            )}&limit=1`
-          );
-          const data = await response.json();
-          if (data && data.length > 0) {
-            const lat = parseFloat(data[0].lat);
-            const lon = parseFloat(data[0].lon);
-            cache[listing.location] = [lat, lon];
-
-            const jitterLat = (Math.random() - 0.5) * 0.002;
-            const jitterLon = (Math.random() - 0.5) * 0.002;
-
-            newMarkers.push({ ...listing, coords: [lat + jitterLat, lon + jitterLon] });
-          }
-        } catch (error) {
-          console.error(`Failed to geocode ${listing.location}`, error);
-        }
-      }
       setMarkers(newMarkers);
       setLoading(false);
     };
@@ -93,6 +100,10 @@ export const ListingsMap = ({ listings }: ListingsMapProps) => {
     if (listings.length > 0) {
       fetchCoordinates();
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [listings]);
 
   if (loading && markers.length === 0) {
