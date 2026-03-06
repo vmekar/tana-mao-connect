@@ -43,8 +43,8 @@ export const Logo: React.FC<LogoProps> = ({ className = '', size = 'md' }) => {
 
       {/* Text */}
       <div className={`font-extrabold tracking-tight select-none ${sizeClasses[size]}`}>
-        <span className="text-primary">Ta</span>
-        <span className="text-indigo-400">NaMão</span>
+        <span className="text-primary">Tem</span>
+        <span className="text-indigo-400">rolo</span>
       </div>
     </div>
   );

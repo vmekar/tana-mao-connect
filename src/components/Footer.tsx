@@ -51,7 +51,7 @@ export const Footer = () => {
         <Separator className="my-8" />
 
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-          <p>© 2025 TanaMão. Todos os direitos reservados.</p>
+          <p>© 2025 Temrolo. Todos os direitos reservados.</p>
           <div className="flex gap-6">
             <a href="#" className="hover:text-primary transition-colors">Privacidade</a>
             <a href="#" className="hover:text-primary transition-colors">Termos</a>
