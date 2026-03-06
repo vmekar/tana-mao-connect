@@ -27,7 +27,9 @@ export interface CreateListingDTO {
 export interface SearchFilters {
   query?: string;
   category?: string;
+  subcategory?: string;
   minPrice?: number;
   maxPrice?: number;
   location?: string;
+  bairros?: string[];
 }

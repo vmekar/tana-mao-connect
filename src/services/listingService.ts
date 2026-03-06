@@ -93,8 +93,20 @@ export const listingService = {
       query = query.eq('category', filters.category);
     }
 
+    if (filters.subcategory) {
+      // Assuming a 'subcategory' column might exist or will be added
+      // If it doesn't exist, this will gracefully return an error or skip results
+      query = query.eq('subcategory', filters.subcategory);
+    }
+
     if (filters.location) {
       query = query.ilike('location', `%${filters.location}%`);
+    }
+
+    if (filters.bairros && filters.bairros.length > 0) {
+      // Depending on db schema, if bairros are stored in a 'bairro' column
+      // we can do an 'in' query.
+      query = query.in('bairro', filters.bairros);
     }
 
     if (filters.minPrice !== undefined) {
