@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Nunito:wght@900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Nunito:wght@800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -20,7 +20,7 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
 
-    /* Temrolo Brand Colors - Professional and Trustworthy */
+    /* TemRolo Brand Colors - Professional and Trustworthy */
     --primary: 240 28% 14%; /* #1a1a2e */
     --primary-foreground: 0 0% 100%;
     --primary-glow: 240 28% 24%;
@@ -102,6 +102,11 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6, .font-heading {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
   }
 
   /* Utility for hiding scrollbar but keeping functionality */
