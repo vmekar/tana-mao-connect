@@ -1,4 +1,5 @@
 import { Separator } from "@/components/ui/separator";
+import { Logo } from "@/components/Logo";
 
 export const Footer = () => {
   return (
@@ -7,11 +8,8 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="text-2xl">🤝</div>
-              <h3 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                TanaMão
-              </h3>
+            <div className="mb-4">
+              <Logo size="md" />
             </div>
             <p className="text-sm text-muted-foreground">
               Conectando compradores e vendedores locais de forma segura e eficiente.

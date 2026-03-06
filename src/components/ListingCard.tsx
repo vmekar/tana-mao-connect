@@ -24,7 +24,7 @@ export const ListingCard = ({
   isFeatured,
 }: ListingCardProps) => {
   return (
-    <Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-elevated hover:-translate-y-1 border-border/50">
+    <Card className="group relative overflow-hidden rounded-xl border-0 shadow-sm hover:shadow-md transition-all duration-300 bg-card">
       <Link to={`/listing/${id}`} className="block h-full">
         {/* Image */}
         <div className="relative aspect-[4/3] overflow-hidden bg-muted">
