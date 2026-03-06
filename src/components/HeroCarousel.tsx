@@ -53,9 +53,9 @@ export const HeroCarousel = () => {
   }, [slides.length]);
 
   return (
-    <section className="w-full bg-background pb-0 h-[300px] md:h-[450px]">
+    <section className="w-full bg-background pb-0 h-[300px] md:h-[320px]">
       {/* Carousel Banner Container */}
-      <div className="relative w-full h-full max-h-[300px] md:max-h-[450px] overflow-hidden group bg-[#1a1a2e]">
+      <div className="relative w-full h-full max-h-[300px] md:max-h-[320px] overflow-hidden group bg-[#1a1a2e]">
         <div
           className="flex transition-transform duration-500 ease-in-out h-full"
           style={{ transform: `translateX(-${currentSlide * 100}%)` }}
@@ -73,12 +73,12 @@ export const HeroCarousel = () => {
         </div>
 
         {/* Centered Overlay Content */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-white px-4 z-20 pointer-events-none">
+        <div className="absolute inset-0 flex flex-col items-center justify-end pb-16 text-white px-4 z-20 pointer-events-none">
           <div className="w-full max-w-[800px] flex flex-col items-center pointer-events-auto">
             <h2 className="text-3xl md:text-5xl font-heading font-extrabold text-center mb-4 drop-shadow-lg transition-opacity duration-500">
               {slides[currentSlide].title}
             </h2>
-            <p className="text-lg md:text-xl text-center mb-8 drop-shadow-md text-gray-200 max-w-2xl transition-opacity duration-500">
+            <p className="text-lg md:text-xl text-center mb-4 md:mb-6 drop-shadow-md text-gray-200 max-w-2xl transition-opacity duration-500">
               {slides[currentSlide].subtitle}
             </p>
 
@@ -125,7 +125,7 @@ export const HeroCarousel = () => {
               key={index}
               onClick={() => setCurrentSlide(index)}
               className={`h-2 rounded-full transition-all ${
-                index === currentSlide ? "bg-white w-8" : "bg-white/50 w-4"
+                index === currentSlide ? "bg-secondary w-8" : "bg-white/50 w-4"
               }`}
               aria-label={`Go to slide ${index + 1}`}
             />
