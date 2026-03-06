@@ -34,8 +34,8 @@ const categories = [
 
 export const NavigationPills = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollContainerRef.current) {
@@ -48,8 +48,8 @@ export const NavigationPills = () => {
   const handleScroll = () => {
     if (scrollContainerRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-      setCanScrollLeft(scrollLeft > 0);
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 5);
+      setShowLeftArrow(scrollLeft > 0);
+      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 1);
     }
   };
 
@@ -62,15 +62,15 @@ export const NavigationPills = () => {
   return (
     <section className="container mx-auto px-4 py-4 md:py-6">
       <div className="relative group">
-        {canScrollLeft && (
-          <button
-            onClick={() => scroll('left')}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:-translate-x-4 z-10 bg-background border shadow-md p-1.5 md:p-2 rounded-full hidden md:flex items-center justify-center hover:bg-muted transition-colors opacity-0 group-hover:opacity-100"
-            aria-label="Scroll left"
-          >
-            <ChevronLeft className="w-4 h-4 md:w-5 md:h-5 text-foreground" />
-          </button>
-        )}
+        <button
+          onClick={() => scroll('left')}
+          className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:-translate-x-4 z-10 bg-background border shadow-md p-1.5 md:p-2 rounded-full hidden md:flex items-center justify-center hover:bg-muted transition-opacity duration-300 ${
+            showLeftArrow ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
+          aria-label="Scroll left"
+        >
+          <ChevronLeft className="w-4 h-4 md:w-5 md:h-5 text-foreground" />
+        </button>
 
         <div
           ref={scrollContainerRef}
@@ -96,15 +96,15 @@ export const NavigationPills = () => {
           })}
         </div>
 
-        {canScrollRight && (
-          <button
-            onClick={() => scroll('right')}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-4 z-10 bg-background border shadow-md p-1.5 md:p-2 rounded-full hidden md:flex items-center justify-center hover:bg-muted transition-colors opacity-0 group-hover:opacity-100"
-            aria-label="Scroll right"
-          >
-            <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-foreground" />
-          </button>
-        )}
+        <button
+          onClick={() => scroll('right')}
+          className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-4 z-10 bg-background border shadow-md p-1.5 md:p-2 rounded-full hidden md:flex items-center justify-center hover:bg-muted transition-opacity duration-300 ${
+            showRightArrow ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
+          aria-label="Scroll right"
+        >
+          <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-foreground" />
+        </button>
       </div>
     </section>
   );
