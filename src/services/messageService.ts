@@ -28,6 +28,16 @@ export interface InboxItem {
   }[];
 }
 
+export interface MessageQueryResult {
+  id: string;
+  content: string;
+  created_at: string;
+  listing_id: string;
+  sender_id: string;
+  listings: { title: string } | null;
+  profiles: { full_name: string | null } | null;
+}
+
 export const messageService = {
   async fetchSellerProfile(userId: string): Promise<Profile | null> {
     const { data, error } = await supabase
@@ -101,8 +111,9 @@ export const messageService = {
       throw error;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const grouped = messages.reduce((acc: Record<string, InboxItem>, msg: any) => {
+    const typedMessages = (messages as unknown as MessageQueryResult[]) || [];
+
+    const grouped = typedMessages.reduce((acc: Record<string, InboxItem>, msg: MessageQueryResult) => {
       const listingId = msg.listing_id;
       if (!acc[listingId]) {
         acc[listingId] = {
