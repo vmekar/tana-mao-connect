@@ -74,6 +74,107 @@ export type Database = {
         }
         Relationships: []
       }
+      favorites: {
+        Row: {
+          listing_id: string
+          user_id: string
+          created_at: string
+        }
+        Insert: {
+          listing_id: string
+          user_id: string
+          created_at?: string
+        }
+        Update: {
+          listing_id?: string
+          user_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      listings: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          price: number
+          category: string
+          location: string
+          images: string[] | null
+          user_id: string
+          status: string
+          is_featured: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          description?: string | null
+          price: number
+          category: string
+          location: string
+          images?: string[] | null
+          user_id: string
+          status?: string
+          is_featured?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string | null
+          price?: number
+          category?: string
+          location?: string
+          images?: string[] | null
+          user_id?: string
+          status?: string
+          is_featured?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          id: string
+          listing_id: string
+          sender_id: string
+          receiver_id: string
+          content: string
+          created_at: string
+          read: boolean
+        }
+        Insert: {
+          id?: string
+          listing_id: string
+          sender_id: string
+          receiver_id: string
+          content: string
+          created_at?: string
+          read?: boolean
+        }
+        Update: {
+          id?: string
+          listing_id?: string
+          sender_id?: string
+          receiver_id?: string
+          content?: string
+          created_at?: string
+          read?: boolean
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

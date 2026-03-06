@@ -96,6 +96,7 @@ export const listingService = {
     if (filters.subcategory) {
       // Assuming a 'subcategory' column might exist or will be added
       // If it doesn't exist, this will gracefully return an error or skip results
+      // @ts-expect-error property does not yet exist in Database definitions
       query = query.eq('subcategory', filters.subcategory);
     }
 
@@ -106,6 +107,7 @@ export const listingService = {
     if (filters.bairros && filters.bairros.length > 0) {
       // Depending on db schema, if bairros are stored in a 'bairro' column
       // we can do an 'in' query.
+      // @ts-expect-error property does not yet exist in Database definitions
       query = query.in('bairro', filters.bairros);
     }
 

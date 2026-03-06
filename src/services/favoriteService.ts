@@ -1,6 +1,24 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Listing, ListingStatus } from "@/types/listing";
 
+interface FavoriteRow {
+  listing_id: string;
+  listings: {
+    id: string;
+    title: string;
+    description: string | null;
+    price: number;
+    category: string;
+    location: string;
+    images: string[] | null;
+    user_id: string;
+    status: string;
+    is_featured: boolean;
+    created_at: string;
+    updated_at: string;
+  };
+}
+
 export const favoriteService = {
   async fetchFavoriteIds(userId: string): Promise<string[]> {
     const { data, error } = await supabase
@@ -44,8 +62,7 @@ export const favoriteService = {
       throw error;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (data as any[]).map((item) => {
+    return (data as unknown as FavoriteRow[]).map((item) => {
       const listing = item.listings;
       return {
         id: listing.id,

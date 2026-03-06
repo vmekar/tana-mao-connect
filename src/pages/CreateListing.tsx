@@ -293,7 +293,11 @@ const CreateListing = () => {
       }
 
       const listingData = {
-        ...values,
+        title: values.title,
+        description: values.description,
+        price: values.price,
+        category: values.category,
+        location: values.location,
         images: finalImageUrls,
       };
 
