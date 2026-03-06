@@ -52,7 +52,7 @@ export const Footer = () => {
 
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
           <div className="flex flex-col md:flex-row items-center gap-2">
-            <p>© 2025 Temrolo. Todos os direitos reservados.</p>
+            <p>© 2025 TemRolo. Todos os direitos reservados.</p>
             <p className="hidden md:block">•</p>
             <a href="https://www.temrolo.com.br" className="hover:text-primary transition-colors font-medium">www.temrolo.com.br</a>
           </div>

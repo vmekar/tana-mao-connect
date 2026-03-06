@@ -24,7 +24,7 @@ export const AdCard = ({
   isFeatured,
 }: AdCardProps) => {
   return (
-    <Card className="group relative overflow-hidden rounded-xl border-0 shadow-sm hover:shadow-md transition-all duration-300 bg-card h-full flex flex-col">
+    <Card className="group relative overflow-hidden rounded-xl border-0 shadow-sm hover:shadow-md transition-all duration-300 bg-card h-full flex flex-col snap-start">
       <Link to={`/listing/${id}`} className="block h-full">
         {/* Image */}
         <div className="relative aspect-[4/3] overflow-hidden bg-muted">

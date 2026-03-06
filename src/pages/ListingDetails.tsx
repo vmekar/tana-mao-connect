@@ -83,7 +83,7 @@ const ListingDetails = () => {
 
   const handleWhatsAppClick = () => {
     if (sellerProfile?.phone) {
-      const message = `Olá! Vi seu anúncio "${listing?.title}" no Temrolo e gostaria de saber mais.`;
+      const message = `Olá! Vi seu anúncio "${listing?.title}" no TemRolo e gostaria de saber mais.`;
       const url = `https://wa.me/${sellerProfile.phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
       window.open(url, '_blank');
     }
@@ -156,7 +156,7 @@ const ListingDetails = () => {
 
               {/* Title & Price (Mobile) */}
               <div className="lg:hidden bg-background p-6 rounded-xl shadow-sm border">
-                <h1 className="text-2xl font-bold mb-2">{listing.title}</h1>
+                <h1 className="text-2xl font-heading font-black mb-2">{listing.title}</h1>
                 <div className="text-3xl font-bold text-primary mb-4">
                   R$ {listing.price.toLocaleString('pt-BR')}
                 </div>
@@ -228,7 +228,7 @@ const ListingDetails = () => {
             <div className="space-y-6">
               {/* Price Card (Desktop) */}
               <div className="hidden lg:block bg-background p-6 rounded-xl shadow-sm border sticky top-24">
-                <h1 className="text-2xl font-bold mb-4">{listing.title}</h1>
+                <h1 className="text-2xl font-heading font-black mb-4">{listing.title}</h1>
                 <div className="text-4xl font-bold text-primary mb-6">
                   R$ {listing.price.toLocaleString('pt-BR')}
                 </div>
