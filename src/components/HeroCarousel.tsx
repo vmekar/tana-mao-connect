@@ -67,7 +67,7 @@ export const HeroCarousel = () => {
                 className="w-full h-full object-cover brightness-[0.6]"
               />
               <div className="absolute inset-0 flex flex-col items-center justify-center text-white px-4">
-                <h2 className="text-3xl md:text-5xl font-bold text-center mb-4 drop-shadow-lg">{slide.title}</h2>
+                <h2 className="text-3xl md:text-5xl font-heading font-black text-center mb-4 drop-shadow-lg">{slide.title}</h2>
                 <p className="text-lg md:text-xl text-center max-w-2xl drop-shadow-md text-gray-200">{slide.subtitle}</p>
               </div>
             </div>
@@ -96,7 +96,7 @@ export const HeroCarousel = () => {
               <Search className="h-5 w-5 text-muted-foreground mr-3" />
               <Input
                 type="text"
-                placeholder="Buscar em Temrolo..."
+                placeholder="Buscar em TemRolo..."
                 className="flex-1 border-0 bg-transparent text-base focus-visible:ring-0 p-0 placeholder:text-muted-foreground"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}

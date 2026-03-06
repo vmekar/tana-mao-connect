@@ -21,7 +21,7 @@ export const Logo: React.FC<LogoProps> = ({ className = '', size = 'md' }) => {
   };
 
   return (
-    <div className={`flex items-center gap-2 font-sans ${className}`}>
+    <div className={`flex items-center gap-2 font-heading ${className}`}>
       {/* Icon: Rounded Square with Checkmark */}
       <svg
         width={iconSizes[size]}
@@ -44,7 +44,7 @@ export const Logo: React.FC<LogoProps> = ({ className = '', size = 'md' }) => {
       {/* Text */}
       <div className={`font-extrabold tracking-tight select-none ${sizeClasses[size]}`}>
         <span className="text-primary">Tem</span>
-        <span className="text-indigo-400">rolo</span>
+        <span className="text-indigo-400">Rolo</span>
       </div>
     </div>
   );

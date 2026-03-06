@@ -32,7 +32,7 @@ const categories = [
 export const NavigationPills = () => {
   return (
     <section className="container mx-auto px-4 py-8">
-      <h2 className="text-2xl font-bold mb-6 text-foreground">
+      <h2 className="text-2xl font-heading font-black mb-6 text-foreground">
         Categorias Populares
       </h2>
 

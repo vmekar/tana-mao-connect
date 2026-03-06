@@ -32,7 +32,7 @@ export const HorizontalAdList = () => {
   if (loading) {
     return (
       <section className="container mx-auto px-4 py-16 bg-muted/30">
-        <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
+        <h2 className="text-3xl md:text-4xl font-heading font-black text-center mb-4">
           Anúncios em Destaque
         </h2>
         <div className="flex justify-center py-12">
@@ -45,7 +45,7 @@ export const HorizontalAdList = () => {
   return (
     <section className="container mx-auto px-4 py-16 bg-muted/30">
       <div className="flex flex-col items-center mb-8">
-        <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
+        <h2 className="text-3xl md:text-4xl font-heading font-black text-center mb-4">
           Anúncios em Destaque
         </h2>
         <p className="text-center text-muted-foreground mb-6">
@@ -76,7 +76,7 @@ export const HorizontalAdList = () => {
       </div>
 
       {viewMode === "list" ? (
-        <div className="flex overflow-x-auto gap-6 pb-6 pt-2 snap-x snap-mandatory hide-scrollbar animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="flex overflow-x-auto gap-4 pb-6 pt-2 snap-x snap-mandatory hide-scrollbar animate-in fade-in slide-in-from-bottom-4 duration-500">
           {listings.map((listing) => (
             <Link key={listing.id} to={`/listing/${listing.id}`} className="snap-start shrink-0 w-[280px] sm:w-[320px]">
               <AdCard
