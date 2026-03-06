@@ -14,22 +14,31 @@ import {
   PawPrint,
   Wrench,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  LucideIcon
 } from "lucide-react";
 
-const categories = [
-  { id: 1, name: "Eletrônicos", icon: Smartphone, color: "bg-purple-100 text-purple-600" },
-  { id: 2, name: "Veículos", icon: Car, color: "bg-blue-100 text-blue-600" },
-  { id: 3, name: "Imóveis", icon: Home, color: "bg-green-100 text-green-600" },
-  { id: 4, name: "Moda", icon: Shirt, color: "bg-pink-100 text-pink-600" },
-  { id: 5, name: "Casa & Jardim", icon: Sofa, color: "bg-orange-100 text-orange-600" },
-  { id: 6, name: "Informática", icon: Laptop, color: "bg-indigo-100 text-indigo-600" },
-  { id: 7, name: "Bebês & Crianças", icon: Baby, color: "bg-yellow-100 text-yellow-600" },
-  { id: 8, name: "Esportes", icon: Dumbbell, color: "bg-red-100 text-red-600" },
-  { id: 9, name: "Música", icon: Music, color: "bg-teal-100 text-teal-600" },
-  { id: 10, name: "Negócios", icon: Briefcase, color: "bg-slate-100 text-slate-600" },
-  { id: 11, name: "Animais", icon: PawPrint, color: "bg-emerald-100 text-emerald-600" },
-  { id: 12, name: "Serviços", icon: Wrench, color: "bg-cyan-100 text-cyan-600" },
+interface Category {
+  id: number;
+  name: string;
+  icon: LucideIcon;
+  color: string;
+  adCount: number;
+}
+
+const categories: Category[] = [
+  { id: 1, name: "Eletrônicos", icon: Smartphone, color: "bg-purple-100 text-purple-600", adCount: 4210 },
+  { id: 2, name: "Veículos", icon: Car, color: "bg-blue-100 text-blue-600", adCount: 1240 },
+  { id: 3, name: "Imóveis", icon: Home, color: "bg-green-100 text-green-600", adCount: 853 },
+  { id: 4, name: "Moda", icon: Shirt, color: "bg-pink-100 text-pink-600", adCount: 512 },
+  { id: 5, name: "Casa & Jardim", icon: Sofa, color: "bg-orange-100 text-orange-600", adCount: 345 },
+  { id: 6, name: "Informática", icon: Laptop, color: "bg-indigo-100 text-indigo-600", adCount: 2100 },
+  { id: 7, name: "Bebês & Crianças", icon: Baby, color: "bg-yellow-100 text-yellow-600", adCount: 156 },
+  { id: 8, name: "Esportes", icon: Dumbbell, color: "bg-red-100 text-red-600", adCount: 430 },
+  { id: 9, name: "Música", icon: Music, color: "bg-teal-100 text-teal-600", adCount: 220 },
+  { id: 10, name: "Negócios", icon: Briefcase, color: "bg-slate-100 text-slate-600", adCount: 98 },
+  { id: 11, name: "Animais", icon: PawPrint, color: "bg-emerald-100 text-emerald-600", adCount: 1105 },
+  { id: 12, name: "Serviços", icon: Wrench, color: "bg-cyan-100 text-cyan-600", adCount: 654 },
 ];
 
 export const NavigationPills = () => {
@@ -83,14 +92,19 @@ export const NavigationPills = () => {
               <Link
                 key={category.id}
                 to={`/search?category=${category.name}`}
-                className="group flex flex-col md:flex-row items-center gap-2 md:gap-3 p-2 md:pr-4 rounded-full bg-card hover:bg-muted transition-all duration-300 border shadow-sm shrink-0 snap-start min-w-[72px] md:min-w-[140px]"
+                className="group flex flex-col md:flex-row items-center gap-2 md:gap-3 p-2 md:pr-4 rounded-3xl md:rounded-full bg-card hover:bg-muted transition-all duration-300 border shadow-sm shrink-0 snap-start min-w-[80px] md:min-w-[160px]"
               >
-                <div className={`w-8 h-8 rounded-full ${category.color} flex items-center justify-center group-hover:scale-105 transition-transform duration-300 shrink-0`}>
-                  <Icon className="w-4 h-4" />
+                <div className={`w-10 h-10 md:w-8 md:h-8 rounded-full ${category.color} flex items-center justify-center group-hover:scale-105 transition-transform duration-300 shrink-0`}>
+                  <Icon className="w-5 h-5 md:w-4 md:h-4" />
                 </div>
-                <span className="text-xs md:text-sm font-semibold text-center md:text-left text-foreground/80 group-hover:text-primary transition-colors whitespace-nowrap">
-                  {category.name}
-                </span>
+                <div className="flex flex-col items-center md:items-start overflow-hidden">
+                  <span className="text-xs md:text-sm font-semibold text-center md:text-left text-foreground/80 group-hover:text-primary transition-colors whitespace-nowrap truncate w-full">
+                    {category.name}
+                  </span>
+                  <span className="text-[10px] md:text-xs text-muted-foreground whitespace-nowrap truncate w-full text-center md:text-left">
+                    {category.adCount.toLocaleString("pt-BR")} anúncios
+                  </span>
+                </div>
               </Link>
             );
           })}
