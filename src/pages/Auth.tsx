@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -168,7 +168,9 @@ export default function Auth() {
       <Card className="w-full max-w-md relative z-10 shadow-elevated border-border/50">
         <CardHeader className="text-center space-y-2">
           <div className="flex justify-center mb-6">
-            <Logo size="lg" />
+            <Link to="/" className="cursor-pointer hover:opacity-80 transition-opacity">
+              <Logo size="lg" />
+            </Link>
           </div>
           <CardDescription>
             Conectando quem precisa com quem pode ajudar
