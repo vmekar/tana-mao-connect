@@ -15,9 +15,31 @@ vi.mock('@/integrations/supabase/client', () => ({
 }));
 
 describe('listingService', () => {
+  // Define a reusable query builder mock
+  const mockQueryBuilder = {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    single: vi.fn().mockReturnThis(),
+    ilike: vi.fn().mockReturnThis(),
+    in: vi.fn().mockReturnThis(),
+    gte: vi.fn().mockReturnThis(),
+    lte: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis(),
+    then: vi.fn((resolve) => resolve({ data: [], error: null })),
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    // Reset the then implementation to a default success state for each test
+    mockQueryBuilder.then.mockImplementation((resolve) => resolve({ data: [], error: null }));
+
+    // Default mock for from() returning our query builder
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    vi.mocked(supabase.from).mockReturnValue(mockQueryBuilder as any);
   });
 
   describe('deleteListing', () => {
@@ -60,6 +82,89 @@ describe('listingService', () => {
       expect(supabase.from).toHaveBeenCalledWith('listings');
       expect(mockDelete).toHaveBeenCalled();
       expect(mockEq).toHaveBeenCalledWith('id', listingId);
+    });
+  });
+  describe('searchListings', () => {
+    it('applies default base query conditions without filters', async () => {
+      await listingService.searchListings({});
+
+      expect(supabase.from).toHaveBeenCalledWith('listings');
+      expect(mockQueryBuilder.select).toHaveBeenCalledWith('*');
+      expect(mockQueryBuilder.eq).toHaveBeenCalledWith('status', 'active');
+      expect(mockQueryBuilder.order).toHaveBeenCalledWith('created_at', { ascending: false });
+
+      // Should not call specific filters
+      expect(mockQueryBuilder.ilike).not.toHaveBeenCalled();
+      expect(mockQueryBuilder.in).not.toHaveBeenCalled();
+      expect(mockQueryBuilder.gte).not.toHaveBeenCalled();
+      expect(mockQueryBuilder.lte).not.toHaveBeenCalled();
+    });
+
+    it('applies ilike for query and location filters', async () => {
+      await listingService.searchListings({
+        query: 'iPhone',
+        location: 'São Paulo',
+      });
+
+      expect(mockQueryBuilder.ilike).toHaveBeenCalledWith('title', '%iPhone%');
+      expect(mockQueryBuilder.ilike).toHaveBeenCalledWith('location', '%São Paulo%');
+    });
+
+    it('applies eq for category and subcategory filters', async () => {
+      await listingService.searchListings({
+        category: 'Eletrônicos',
+        subcategory: 'Celulares',
+      });
+
+      // Includes 'status' from default base condition
+      expect(mockQueryBuilder.eq).toHaveBeenCalledWith('status', 'active');
+      expect(mockQueryBuilder.eq).toHaveBeenCalledWith('category', 'Eletrônicos');
+      expect(mockQueryBuilder.eq).toHaveBeenCalledWith('subcategory', 'Celulares');
+    });
+
+    it('applies in for bairros filter when provided with an array of values', async () => {
+      await listingService.searchListings({
+        bairros: ['Centro', 'Jardins', 'Pinheiros'],
+      });
+
+      expect(mockQueryBuilder.in).toHaveBeenCalledWith('bairro', ['Centro', 'Jardins', 'Pinheiros']);
+    });
+
+    it('does not apply in for bairros filter when array is empty', async () => {
+      await listingService.searchListings({
+        bairros: [],
+      });
+
+      expect(mockQueryBuilder.in).not.toHaveBeenCalled();
+    });
+
+    it('applies gte and lte for minPrice and maxPrice filters', async () => {
+      await listingService.searchListings({
+        minPrice: 100,
+        maxPrice: 500,
+      });
+
+      expect(mockQueryBuilder.gte).toHaveBeenCalledWith('price', 100);
+      expect(mockQueryBuilder.lte).toHaveBeenCalledWith('price', 500);
+    });
+
+    it('applies 0 value for price ranges correctly', async () => {
+      await listingService.searchListings({
+        minPrice: 0,
+        maxPrice: 0,
+      });
+
+      expect(mockQueryBuilder.gte).toHaveBeenCalledWith('price', 0);
+      expect(mockQueryBuilder.lte).toHaveBeenCalledWith('price', 0);
+    });
+
+    it('throws an error and logs it if the query fails', async () => {
+      const mockError = { message: 'Database error' };
+      mockQueryBuilder.then.mockImplementation((resolve) => resolve({ data: null, error: mockError }));
+
+      await expect(listingService.searchListings({})).rejects.toEqual(mockError);
+
+      expect(console.error).toHaveBeenCalledWith('Error searching listings:', mockError);
     });
   });
 });
