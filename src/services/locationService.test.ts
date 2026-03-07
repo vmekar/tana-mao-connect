@@ -95,6 +95,7 @@ describe('locationService', () => {
         { nome: 'Vila A' }, // Duplicate
         { nome: 'Vila B' },
       ];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mockSubdistritos: any[] = [];
 
       vi.mocked(global.fetch).mockImplementation(async (input) => {
