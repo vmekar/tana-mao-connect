@@ -1,0 +1,22 @@
+--- src/components/BottomNav.tsx
++++ src/components/BottomNav.tsx
+@@ -2,10 +2,12 @@
+ import { Home, Search, Plus, Heart, User } from "lucide-react";
+ import { cn } from "@/lib/utils";
++import { useAuth } from "@/hooks/useAuth";
+
+ export const BottomNav = () => {
+   const location = useLocation();
++  const { user } = useAuth();
+
+   const isActive = (path: string) => location.pathname === path;
+
+@@ -32,7 +34,7 @@
+         </Link>
+
+         <Link
+-          to={isActive("/novo-anuncio") ? "#" : (document.cookie.includes("sb-") ? "/novo-anuncio" : "/auth")}
++          to={user ? "/novo-anuncio" : "/auth"}
+           className="flex flex-col items-center justify-center w-full h-full -mt-5"
+         >
+           <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-colors">

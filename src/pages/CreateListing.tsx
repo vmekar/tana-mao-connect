@@ -48,10 +48,27 @@ const formSchema = z.object({
   category: z.string({
     required_error: "Selecione uma categoria.",
   }),
+  subcategory: z.string().optional(),
   location: z.string().min(3, {
     message: "A localização é obrigatória.",
   }),
+  bairro: z.string().optional(),
 });
+
+const CATEGORY_HIERARCHY: Record<string, string[]> = {
+  "Eletrônicos": ["Celulares", "Computadores", "TV e Vídeo", "Áudio", "Videogames"],
+  "Veículos": ["Carros", "Motos", "Caminhões", "Peças e Acessórios", "Barcos e Lanchas"],
+  "Imóveis": ["Apartamentos", "Casas", "Terrenos", "Comercial"],
+  "Moda": ["Roupas Femininas", "Roupas Masculinas", "Calçados", "Acessórios"],
+  "Casa & Jardim": ["Móveis", "Decoração", "Eletrodomésticos", "Jardinagem"],
+  "Informática": ["Notebooks", "Desktops", "Acessórios", "Componentes"],
+  "Bebês & Crianças": ["Roupas", "Brinquedos", "Carrinhos e Cadeirinhas", "Móveis"],
+  "Esportes": ["Bicicletas", "Fitness", "Esportes Radicais", "Artigos Esportivos"],
+  "Música": ["Instrumentos Musicais", "Equipamentos de Áudio", "Discos e CDs"],
+  "Negócios": ["Equipamentos Comerciais", "Mobiliário Corporativo", "Serviços"],
+  "Animais": ["Cachorros", "Gatos", "Acessórios", "Outros"],
+  "Serviços": ["Limpeza", "Reformas", "Aulas", "Transporte"],
+};
 
 const CATEGORIES = [
   { id: 1, name: "Eletrônicos", icon: Smartphone, color: "bg-purple-100 text-purple-600 border-purple-200" },
@@ -85,8 +102,10 @@ const CreateListing = () => {
   // Location state
   const [states, setStates] = useState<State[]>([]);
   const [cities, setCities] = useState<City[]>([]);
+  const [bairrosOptions, setBairrosOptions] = useState<string[]>([]);
   const [selectedState, setSelectedState] = useState<string>("");
   const [selectedCity, setSelectedCity] = useState<string>("");
+  const [selectedBairro, setSelectedBairro] = useState<string>("");
 
   // Manage images: both existing URLs and new Files
   const [images, setImages] = useState<ImageItem[]>([]);
@@ -102,6 +121,8 @@ const CreateListing = () => {
       price: 0,
       location: "",
       category: "",
+      subcategory: "",
+      bairro: "",
     },
     mode: "onChange",
   });
@@ -117,6 +138,19 @@ const CreateListing = () => {
       setCities([]);
     }
   }, [selectedState]);
+
+  useEffect(() => {
+    if (selectedCity && cities.length > 0) {
+      const cityObj = cities.find(c => c.nome === selectedCity);
+      if (cityObj) {
+        locationService.fetchBairros(cityObj.id).then(setBairrosOptions);
+      } else {
+        setBairrosOptions([]);
+      }
+    } else {
+      setBairrosOptions([]);
+    }
+  }, [selectedCity, cities]);
 
   useEffect(() => {
     const fetchListing = async () => {
@@ -154,12 +188,22 @@ const CreateListing = () => {
           }
         }
 
+        // @ts-expect-error db missing bairro type check
+        if (listing.bairro) {
+           // @ts-expect-error db missing bairro type check
+           setSelectedBairro(listing.bairro);
+        }
+
         form.reset({
           title: listing.title,
           description: listing.description || "",
           price: listing.price,
           category: listing.category,
+          // @ts-expect-error missing subcategory type in DB
+          subcategory: listing.subcategory || "",
           location: listing.location,
+          // @ts-expect-error db missing bairro type check
+          bairro: listing.bairro || "",
         });
 
         setImages(listing.images.map(url => ({ url })));
@@ -297,7 +341,9 @@ const CreateListing = () => {
         description: values.description,
         price: values.price,
         category: values.category,
+        subcategory: values.subcategory,
         location: values.location,
+        bairro: values.bairro,
         images: finalImageUrls,
       };
 
@@ -489,6 +535,33 @@ const CreateListing = () => {
                     )}
                   />
 
+                  {form.watch("category") && CATEGORY_HIERARCHY[form.watch("category")] && (
+                    <FormField
+                      control={form.control}
+                      name="subcategory"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Subcategoria (Opcional)</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                            <FormControl>
+                              <SelectTrigger className="h-12">
+                                <SelectValue placeholder="Selecione a Subcategoria" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {CATEGORY_HIERARCHY[form.watch("category")].map((sub) => (
+                                <SelectItem key={sub} value={sub}>
+                                  {sub}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
                   <FormField
                     control={form.control}
                     name="title"
@@ -597,7 +670,9 @@ const CreateListing = () => {
                         <Select
                           onValueChange={(val) => {
                             setSelectedCity(val);
+                            setSelectedBairro("");
                             form.setValue("location", `${val} - ${selectedState}`, { shouldValidate: true });
+                            form.setValue("bairro", "", { shouldValidate: true });
                           }}
                           value={selectedCity}
                           disabled={!selectedState}
@@ -616,6 +691,33 @@ const CreateListing = () => {
                           </SelectContent>
                         </Select>
                       </FormItem>
+
+                      {bairrosOptions.length > 0 && (
+                        <FormItem>
+                          <FormLabel>Bairro</FormLabel>
+                          <Select
+                            onValueChange={(val) => {
+                              setSelectedBairro(val);
+                              form.setValue("bairro", val, { shouldValidate: true });
+                            }}
+                            value={selectedBairro}
+                            disabled={!selectedCity}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="h-12">
+                                <SelectValue placeholder="Selecione o Bairro" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {bairrosOptions.map((bairro) => (
+                                <SelectItem key={bairro} value={bairro}>
+                                  {bairro}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
 
                        {/* Hidden field for validation */}
                       <FormField

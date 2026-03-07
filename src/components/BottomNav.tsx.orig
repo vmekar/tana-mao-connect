@@ -1,11 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
 import { Home, Search, Plus, Heart, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/hooks/useAuth";
 
 export const BottomNav = () => {
   const location = useLocation();
-  const { user } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -35,7 +33,7 @@ export const BottomNav = () => {
         </Link>
 
         <Link
-          to={user ? "/novo-anuncio" : "/auth"}
+          to="/anunciar"
           className="flex flex-col items-center justify-center w-full h-full -mt-5"
         >
           <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-colors">
