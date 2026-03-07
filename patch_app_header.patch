@@ -1,0 +1,49 @@
+--- src/App.tsx
++++ src/App.tsx
+@@ -24,7 +24,7 @@
+
+             {/* Protected Routes */}
+             <Route
+-              path="/anunciar"
++              path="/novo-anuncio"
+               element={
+                 <ProtectedRoute>
+                   <CreateListing />
+--- src/components/Header.tsx
++++ src/components/Header.tsx
+@@ -74,7 +74,7 @@
+                 </DropdownMenu>
+
+                 <Button variant="secondary" className="hidden md:flex font-semibold shadow-md hover:shadow-lg transition-all" asChild>
+-                  <Link to="/anunciar">Anunciar Grátis</Link>
++                  <Link to="/novo-anuncio">Anunciar Grátis</Link>
+                 </Button>
+               </>
+             ) : (
+@@ -82,9 +82,9 @@
+                 <Button variant="ghost" asChild className="hidden md:flex">
+                   <Link to="/auth">Entrar</Link>
+                 </Button>
+-                <Button variant="secondary" asChild className="hidden md:flex font-semibold shadow-md hover:shadow-lg transition-all">
+-                  <Link to="/auth">Cadastrar</Link>
+-                </Button>
++                <Button variant="secondary" className="hidden md:flex font-semibold shadow-md hover:shadow-lg transition-all" asChild>
++                  <Link to="/auth">Anunciar Grátis</Link>
++                </Button>
+               </>
+             )}
+           </div>
+--- src/components/BottomNav.tsx
++++ src/components/BottomNav.tsx
+@@ -23,10 +23,10 @@
+         </Link>
+
+         <Link
+-          to="/anunciar"
++          to={isActive("/novo-anuncio") ? "#" : (document.cookie.includes("sb-") ? "/novo-anuncio" : "/auth")}
+           className="flex flex-col items-center justify-center w-full h-full -mt-5"
+         >
+           <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-colors">
+             <Plus className="w-6 h-6" strokeWidth={3} />
+           </div>
+           <span className="text-[10px] font-medium mt-1 text-muted-foreground">Anunciar</span>

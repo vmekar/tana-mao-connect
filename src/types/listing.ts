@@ -6,7 +6,9 @@ export interface Listing {
   description?: string;
   price: number;
   category: string;
+  subcategory?: string;
   location: string;
+  bairro?: string;
   images: string[];
   userId: string;
   status: ListingStatus;
@@ -20,7 +22,9 @@ export interface CreateListingDTO {
   description: string;
   price: number;
   category: string;
+  subcategory?: string;
   location: string;
+  bairro?: string;
   images: string[];
 }
 

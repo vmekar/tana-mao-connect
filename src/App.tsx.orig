@@ -33,7 +33,7 @@ const App = () => (
 
             {/* Protected Routes */}
             <Route
-              path="/novo-anuncio"
+              path="/anunciar"
               element={
                 <ProtectedRoute>
                   <CreateListing />
