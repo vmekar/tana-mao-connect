@@ -55,6 +55,54 @@ describe('locationService', () => {
     });
   });
 
+  describe('fetchCities', () => {
+    it('returns an empty array if uf is not provided', async () => {
+      const cities = await locationService.fetchCities('');
+      expect(cities).toEqual([]);
+      expect(global.fetch).not.toHaveBeenCalled();
+    });
+
+    it('returns an array of cities on successful fetch', async () => {
+      const mockCities = [
+        { id: 1, nome: 'City A' },
+        { id: 2, nome: 'City B' },
+      ];
+
+      vi.mocked(global.fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockCities,
+      } as Response);
+
+      const cities = await locationService.fetchCities('SP');
+
+      expect(global.fetch).toHaveBeenCalledWith(`${IBGE_API_BASE}/estados/SP/municipios`);
+      expect(cities).toEqual(mockCities);
+    });
+
+    it('handles non-ok response by returning an empty array and logging an error', async () => {
+      vi.mocked(global.fetch).mockResolvedValueOnce({
+        ok: false,
+      } as Response);
+
+      const cities = await locationService.fetchCities('SP');
+
+      expect(global.fetch).toHaveBeenCalledWith(`${IBGE_API_BASE}/estados/SP/municipios`);
+      expect(console.error).toHaveBeenCalledWith('Error fetching cities:', new Error('Failed to fetch cities'));
+      expect(cities).toEqual([]);
+    });
+
+    it('handles network error by returning an empty array and logging an error', async () => {
+      const networkError = new Error('Network error');
+      vi.mocked(global.fetch).mockRejectedValueOnce(networkError);
+
+      const cities = await locationService.fetchCities('SP');
+
+      expect(global.fetch).toHaveBeenCalledWith(`${IBGE_API_BASE}/estados/SP/municipios`);
+      expect(console.error).toHaveBeenCalledWith('Error fetching cities:', networkError);
+      expect(cities).toEqual([]);
+    });
+  });
+
   describe('fetchBairros', () => {
     it('returns an empty array if municipioId is not provided', async () => {
       const bairros = await locationService.fetchBairros(0);
