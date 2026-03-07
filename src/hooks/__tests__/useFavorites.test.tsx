@@ -42,6 +42,7 @@ describe('useFavorites', () => {
 
     // Setup mock toast
     mockToast = vi.fn();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(useToast).mockReturnValue({ toast: mockToast } as any);
   });
 
@@ -56,6 +57,7 @@ describe('useFavorites', () => {
   describe('toggleFavorite', () => {
     it('should show toast "Login necessário" and not call service when user is unauthenticated', () => {
       // Mock unauthenticated state
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       vi.mocked(useAuth).mockReturnValue({ user: null } as any);
 
       const { result } = renderHook(() => useFavorites(), {
@@ -78,6 +80,7 @@ describe('useFavorites', () => {
 
     it('should add to favorites when listing is not favorited', async () => {
       // Mock authenticated state
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       vi.mocked(useAuth).mockReturnValue({ user: { id: 'user-1' } } as any);
 
       // Mock service to return empty favorites list initially
@@ -110,6 +113,7 @@ describe('useFavorites', () => {
 
     it('should remove from favorites when listing is already favorited', async () => {
       // Mock authenticated state
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       vi.mocked(useAuth).mockReturnValue({ user: { id: 'user-1' } } as any);
 
       // Mock service to return a list that includes the listing
