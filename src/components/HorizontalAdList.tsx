@@ -5,7 +5,7 @@ import { ptBR } from "date-fns/locale";
 import { AdCard } from "./AdCard";
 import { listingService } from "@/services/listingService";
 import { Listing } from "@/types/listing";
-import { Map, Grid, ChevronLeft, ChevronRight, Search, MapPin, Crosshair } from "lucide-react";
+import { Map, Grid, ChevronLeft, ChevronRight, Search, MapPin, Crosshair, Loader2, Check } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { ListingsMap } from "./ListingsMap";
@@ -16,6 +16,8 @@ export const HorizontalAdList = () => {
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState("");
   const navigate = useNavigate();
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationSuccess, setLocationSuccess] = useState(false);
 
   const handleSearch = () => {
     const params = new URLSearchParams();
@@ -124,6 +126,7 @@ export const HorizontalAdList = () => {
                 title="Usar minha localização"
                 onClick={() => {
                   if ("geolocation" in navigator) {
+                    setIsLocating(true);
                     navigator.geolocation.getCurrentPosition(
                       async (position) => {
                         try {
@@ -144,19 +147,30 @@ export const HorizontalAdList = () => {
                             } else {
                                 setLocation("Localização encontrada");
                             }
+                            setIsLocating(false);
+                            setLocationSuccess(true);
+                            setTimeout(() => setLocationSuccess(false), 2000);
                           }
                         } catch (error) {
                           console.error("Error fetching location data:", error);
+                          setIsLocating(false);
                         }
                       },
                       (error) => {
                         console.error("Error getting location:", error);
+                        setIsLocating(false);
                       }
                     );
                   }
                 }}
               >
-                <Crosshair className="h-4 w-4" />
+                {isLocating ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                ) : locationSuccess ? (
+                  <Check className="h-4 w-4 text-green-500" />
+                ) : (
+                  <Crosshair className="h-4 w-4" />
+                )}
               </button>
           </div>
           <Button size="sm" className="w-full md:w-auto h-10 px-6 font-semibold rounded-lg shrink-0 md:rounded-l-none" onClick={handleSearch}>Buscar</Button>
