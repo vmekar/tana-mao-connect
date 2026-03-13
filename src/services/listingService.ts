@@ -31,8 +31,7 @@ export const listingService = {
       throw error;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (data as any[]).map((item: ListingRow) => ({
+    return (data as ListingRow[]).map((item) => ({
       id: item.id,
       title: item.title,
       description: item.description || undefined,
@@ -126,8 +125,7 @@ export const listingService = {
       throw error;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (data as any[]).map((item: ListingRow) => ({
+    return (data as ListingRow[]).map((item) => ({
       id: item.id,
       title: item.title,
       description: item.description || undefined,
@@ -155,8 +153,7 @@ export const listingService = {
       throw error;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (data as any[]).map((item: ListingRow) => ({
+    return (data as ListingRow[]).map((item) => ({
       id: item.id,
       title: item.title,
       description: item.description || undefined,
