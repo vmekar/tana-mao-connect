@@ -7,7 +7,9 @@ interface ListingRow {
   description: string | null;
   price: number;
   category: string;
+  subcategory?: string;
   location: string;
+  bairro?: string;
   images: string[] | null;
   user_id: string;
   status: string;
@@ -31,8 +33,7 @@ export const listingService = {
       throw error;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (data as any[]).map((item: ListingRow) => ({
+    return (data as ListingRow[]).map((item: ListingRow) => ({
       id: item.id,
       title: item.title,
       description: item.description || undefined,
@@ -126,8 +127,7 @@ export const listingService = {
       throw error;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (data as any[]).map((item: ListingRow) => ({
+    return (data as ListingRow[]).map((item: ListingRow) => ({
       id: item.id,
       title: item.title,
       description: item.description || undefined,
@@ -155,8 +155,7 @@ export const listingService = {
       throw error;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (data as any[]).map((item: ListingRow) => ({
+    return (data as ListingRow[]).map((item: ListingRow) => ({
       id: item.id,
       title: item.title,
       description: item.description || undefined,
