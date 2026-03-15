@@ -7,7 +7,9 @@ interface ListingRow {
   description: string | null;
   price: number;
   category: string;
+  subcategory?: string;
   location: string;
+  bairro?: string;
   images: string[] | null;
   user_id: string;
   status: string;
