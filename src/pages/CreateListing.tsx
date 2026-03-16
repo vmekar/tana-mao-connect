@@ -325,16 +325,14 @@ const CreateListing = () => {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      const finalImageUrls: string[] = [];
-
-      for (const img of images) {
-        if (img.file) {
-          const url = await listingService.uploadListingImage(img.file);
-          finalImageUrls.push(url);
-        } else {
-          finalImageUrls.push(img.url);
-        }
-      }
+      const finalImageUrls: string[] = await Promise.all(
+        images.map(async (img) => {
+          if (img.file) {
+            return await listingService.uploadListingImage(img.file);
+          }
+          return img.url;
+        })
+      );
 
       const listingData = {
         title: values.title,
