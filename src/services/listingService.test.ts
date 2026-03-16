@@ -84,6 +84,61 @@ describe('listingService', () => {
       expect(mockEq).toHaveBeenCalledWith('id', listingId);
     });
   });
+  describe('fetchDetails', () => {
+    it('returns null and logs an error when fetch fails', async () => {
+      const mockError = { message: 'Database error' };
+      mockQueryBuilder.then.mockImplementation((resolve) => resolve({ data: null, error: mockError }));
+
+      const result = await listingService.fetchDetails('listing-123');
+
+      expect(result).toBeNull();
+      expect(console.error).toHaveBeenCalledWith('Error fetching listing details:', mockError);
+
+      expect(supabase.from).toHaveBeenCalledWith('listings');
+      expect(mockQueryBuilder.select).toHaveBeenCalledWith('id, title, description, price, category, subcategory, location, bairro, images, user_id, status, is_featured, created_at, updated_at');
+      expect(mockQueryBuilder.eq).toHaveBeenCalledWith('id', 'listing-123');
+      expect(mockQueryBuilder.single).toHaveBeenCalled();
+    });
+
+    it('returns the formatted listing when fetch succeeds', async () => {
+      const mockData = {
+        id: 'listing-123',
+        title: 'Test Listing',
+        description: 'Test Description',
+        price: 100,
+        category: 'Test Category',
+        subcategory: 'Test Subcategory',
+        location: 'Test Location',
+        bairro: 'Test Bairro',
+        images: ['img1.jpg'],
+        user_id: 'user-123',
+        status: 'active',
+        is_featured: true,
+        created_at: '2023-01-01T00:00:00.000Z',
+        updated_at: '2023-01-01T00:00:00.000Z',
+      };
+
+      mockQueryBuilder.then.mockImplementation((resolve) => resolve({ data: mockData, error: null }));
+
+      const result = await listingService.fetchDetails('listing-123');
+
+      expect(result).toEqual({
+        id: 'listing-123',
+        title: 'Test Listing',
+        description: 'Test Description',
+        price: 100,
+        category: 'Test Category',
+        location: 'Test Location',
+        images: ['img1.jpg'],
+        userId: 'user-123',
+        status: 'active',
+        isFeatured: true,
+        createdAt: '2023-01-01T00:00:00.000Z',
+        updatedAt: '2023-01-01T00:00:00.000Z',
+      });
+    });
+  });
+
   describe('searchListings', () => {
     it('applies default base query conditions without filters', async () => {
       await listingService.searchListings({});
