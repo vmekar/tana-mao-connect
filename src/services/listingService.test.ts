@@ -84,6 +84,105 @@ describe('listingService', () => {
       expect(mockEq).toHaveBeenCalledWith('id', listingId);
     });
   });
+  describe('fetchDetails', () => {
+    it('successfully fetches and maps database snake_case fields to camelCase Listing interface', async () => {
+      const mockListingRow = {
+        id: '123',
+        title: 'Test Listing',
+        description: 'Test Description',
+        price: 100,
+        category: 'Test Category',
+        location: 'Test Location',
+        images: ['image1.jpg'],
+        user_id: 'user-123',
+        status: 'active',
+        is_featured: true,
+        created_at: '2023-01-01T00:00:00.000Z',
+        updated_at: '2023-01-02T00:00:00.000Z',
+      };
+
+      mockQueryBuilder.then.mockImplementation((resolve) => resolve({ data: mockListingRow, error: null }));
+
+      const result = await listingService.fetchDetails('123');
+
+      expect(supabase.from).toHaveBeenCalledWith('listings');
+      expect(mockQueryBuilder.select).toHaveBeenCalledWith('id, title, description, price, category, subcategory, location, bairro, images, user_id, status, is_featured, created_at, updated_at');
+      expect(mockQueryBuilder.eq).toHaveBeenCalledWith('id', '123');
+      expect(mockQueryBuilder.single).toHaveBeenCalled();
+
+      expect(result).toEqual({
+        id: '123',
+        title: 'Test Listing',
+        description: 'Test Description',
+        price: 100,
+        category: 'Test Category',
+        location: 'Test Location',
+        images: ['image1.jpg'],
+        userId: 'user-123',
+        status: 'active',
+        isFeatured: true,
+        createdAt: '2023-01-01T00:00:00.000Z',
+        updatedAt: '2023-01-02T00:00:00.000Z',
+      });
+    });
+
+    it('maps null description to undefined', async () => {
+      const mockListingRow = {
+        id: '123',
+        title: 'Test Listing',
+        description: null, // Null from DB
+        price: 100,
+        category: 'Test Category',
+        location: 'Test Location',
+        images: ['image1.jpg'],
+        user_id: 'user-123',
+        status: 'active',
+        is_featured: false,
+        created_at: '2023-01-01T00:00:00.000Z',
+        updated_at: '2023-01-02T00:00:00.000Z',
+      };
+
+      mockQueryBuilder.then.mockImplementation((resolve) => resolve({ data: mockListingRow, error: null }));
+
+      const result = await listingService.fetchDetails('123');
+
+      expect(result?.description).toBeUndefined();
+    });
+
+    it('maps null images to an empty array', async () => {
+      const mockListingRow = {
+        id: '123',
+        title: 'Test Listing',
+        description: 'Test Description',
+        price: 100,
+        category: 'Test Category',
+        location: 'Test Location',
+        images: null, // Null from DB
+        user_id: 'user-123',
+        status: 'active',
+        is_featured: false,
+        created_at: '2023-01-01T00:00:00.000Z',
+        updated_at: '2023-01-02T00:00:00.000Z',
+      };
+
+      mockQueryBuilder.then.mockImplementation((resolve) => resolve({ data: mockListingRow, error: null }));
+
+      const result = await listingService.fetchDetails('123');
+
+      expect(result?.images).toEqual([]);
+    });
+
+    it('returns null and logs error if database query fails', async () => {
+      const mockError = { message: 'Database query failed' };
+      mockQueryBuilder.then.mockImplementation((resolve) => resolve({ data: null, error: mockError }));
+
+      const result = await listingService.fetchDetails('123');
+
+      expect(result).toBeNull();
+      expect(console.error).toHaveBeenCalledWith('Error fetching listing details:', mockError);
+    });
+  });
+
   describe('searchListings', () => {
     it('applies default base query conditions without filters', async () => {
       await listingService.searchListings({});
