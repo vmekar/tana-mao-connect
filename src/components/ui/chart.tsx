@@ -75,7 +75,11 @@ ${prefix} [data-chart=${id}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
     const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
+    // Basic sanitization to prevent XSS and CSS injection:
+    // Strip out potentially dangerous characters like <, >, }, and ;
+    const sanitizedColor = color ? color.replace(/[<>;}]/g, "") : color;
+    const sanitizedKey = key.replace(/[<>;}]/g, "");
+    return sanitizedColor && sanitizedKey ? `  --color-${sanitizedKey}: ${sanitizedColor};` : null;
   })
   .join("\n")}
 }
