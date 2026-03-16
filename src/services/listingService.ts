@@ -18,11 +18,13 @@ interface ListingRow {
   updated_at: string;
 }
 
+const LISTING_COLUMNS = 'id, title, description, price, category, subcategory, location, bairro, images, user_id, status, is_featured, created_at, updated_at';
+
 export const listingService = {
   async fetchFeatured(): Promise<Listing[]> {
     const { data, error } = await supabase
       .from('listings')
-      .select('*')
+      .select(LISTING_COLUMNS)
       .eq('status', 'active')
       .order('is_featured', { ascending: false })
       .order('created_at', { ascending: false })
@@ -52,7 +54,7 @@ export const listingService = {
   async fetchDetails(id: string): Promise<Listing | null> {
     const { data, error } = await supabase
       .from('listings')
-      .select('*')
+      .select(LISTING_COLUMNS)
       .eq('id', id)
       .single();
 
@@ -82,7 +84,7 @@ export const listingService = {
   async searchListings(filters: SearchFilters): Promise<Listing[]> {
     let query = supabase
       .from('listings')
-      .select('*')
+      .select(LISTING_COLUMNS)
       .eq('status', 'active')
       .order('created_at', { ascending: false });
 
@@ -146,7 +148,7 @@ export const listingService = {
   async fetchUserListings(userId: string): Promise<Listing[]> {
     const { data, error } = await supabase
       .from('listings')
-      .select('*')
+      .select(LISTING_COLUMNS)
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
@@ -247,7 +249,7 @@ export const listingService = {
         images: listing.images,
         user_id: user.id,
       })
-      .select()
+      .select(LISTING_COLUMNS)
       .single();
 
     if (error) throw error;
@@ -293,7 +295,7 @@ export const listingService = {
       })
       .eq('id', id)
       .eq('user_id', user.id)
-      .select()
+      .select(LISTING_COLUMNS)
       .single();
 
     if (error) throw error;
