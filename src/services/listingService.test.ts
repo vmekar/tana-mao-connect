@@ -27,6 +27,7 @@ describe('listingService', () => {
     gte: vi.fn().mockReturnThis(),
     lte: vi.fn().mockReturnThis(),
     delete: vi.fn().mockReturnThis(),
+    update: vi.fn().mockReturnThis(),
     then: vi.fn((resolve) => resolve({ data: [], error: null })),
   };
 
@@ -165,6 +166,104 @@ describe('listingService', () => {
       await expect(listingService.searchListings({})).rejects.toEqual(mockError);
 
       expect(console.error).toHaveBeenCalledWith('Error searching listings:', mockError);
+    });
+  });
+
+  describe('updateListing', () => {
+    const mockListingDto = {
+      title: 'Updated Phone',
+      description: 'Updated condition',
+      price: 900,
+      category: 'Eletrônicos',
+      subcategory: 'Celulares',
+      location: 'São Paulo',
+      bairro: 'Centro',
+      images: ['image1.jpg'],
+    };
+
+    it('throws an error if the user is not authenticated', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      vi.mocked(supabase.auth.getUser).mockResolvedValue({
+        data: { user: null },
+        error: null,
+      } as any);
+
+      await expect(listingService.updateListing('listing-123', mockListingDto)).rejects.toThrow('User not authenticated');
+    });
+
+    it('throws an error if the update operation fails', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      vi.mocked(supabase.auth.getUser).mockResolvedValue({
+        data: { user: { id: 'user-123' } },
+        error: null,
+      } as any);
+
+      const mockError = { message: 'Update failed' };
+      mockQueryBuilder.then.mockImplementation((resolve) => resolve({ data: null, error: mockError }));
+
+      await expect(listingService.updateListing('listing-123', mockListingDto)).rejects.toEqual(mockError);
+    });
+
+    it('successfully updates and returns the listing', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      vi.mocked(supabase.auth.getUser).mockResolvedValue({
+        data: { user: { id: 'user-123' } },
+        error: null,
+      } as any);
+
+      const mockResponseData = {
+        id: 'listing-123',
+        title: mockListingDto.title,
+        description: mockListingDto.description,
+        price: mockListingDto.price,
+        category: mockListingDto.category,
+        subcategory: mockListingDto.subcategory,
+        location: mockListingDto.location,
+        bairro: mockListingDto.bairro,
+        images: mockListingDto.images,
+        user_id: 'user-123',
+        status: 'active',
+        is_featured: false,
+        created_at: '2023-01-01T00:00:00Z',
+        updated_at: '2023-01-02T00:00:00Z',
+      };
+
+      mockQueryBuilder.then.mockImplementation((resolve) => resolve({ data: mockResponseData, error: null }));
+
+      const result = await listingService.updateListing('listing-123', mockListingDto);
+
+      expect(supabase.from).toHaveBeenCalledWith('listings');
+      expect(mockQueryBuilder.update).toHaveBeenCalledWith(expect.objectContaining({
+        title: mockListingDto.title,
+        description: mockListingDto.description,
+        price: mockListingDto.price,
+        category: mockListingDto.category,
+        subcategory: mockListingDto.subcategory,
+        location: mockListingDto.location,
+        bairro: mockListingDto.bairro,
+        images: mockListingDto.images,
+      }));
+      expect(mockQueryBuilder.eq).toHaveBeenCalledWith('id', 'listing-123');
+      expect(mockQueryBuilder.eq).toHaveBeenCalledWith('user_id', 'user-123');
+      expect(mockQueryBuilder.select).toHaveBeenCalledWith('id, title, description, price, category, subcategory, location, bairro, images, user_id, status, is_featured, created_at, updated_at');
+      expect(mockQueryBuilder.single).toHaveBeenCalled();
+
+      expect(result).toEqual({
+        id: mockResponseData.id,
+        title: mockResponseData.title,
+        description: mockResponseData.description,
+        price: mockResponseData.price,
+        category: mockResponseData.category,
+        subcategory: mockResponseData.subcategory,
+        location: mockResponseData.location,
+        bairro: mockResponseData.bairro,
+        images: mockResponseData.images,
+        userId: mockResponseData.user_id,
+        status: mockResponseData.status,
+        isFeatured: mockResponseData.is_featured,
+        createdAt: mockResponseData.created_at,
+        updatedAt: mockResponseData.updated_at,
+      });
     });
   });
 });
