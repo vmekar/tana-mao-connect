@@ -146,5 +146,87 @@ describe('useFavorites', () => {
       expect(favoriteService.removeFavorite).toHaveBeenCalledWith('user-1', 'listing-1');
       expect(favoriteService.addFavorite).not.toHaveBeenCalled();
     });
+
+    it('should revert cache and show toast when addFavorite fails', async () => {
+      vi.mocked(useAuth).mockReturnValue({ user: { id: 'user-1' } } as any);
+      vi.mocked(favoriteService.fetchFavoriteIds).mockResolvedValue([]);
+      vi.mocked(favoriteService.addFavorite).mockRejectedValue(new Error('API Error'));
+
+      const { result } = renderHook(() => useFavorites(), {
+        wrapper: createWrapper(),
+      });
+
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      });
+
+      act(() => {
+        result.current.toggleFavorite('listing-1');
+      });
+
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 10));
+      });
+
+      expect(mockToast).toHaveBeenCalledWith({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível adicionar aos favoritos.",
+      });
+      // The cache should be empty
+      expect(queryClient.getQueryData(['favorites', 'user-1'])).toEqual([]);
+    });
+
+    it('should revert cache and show toast when removeFavorite fails', async () => {
+      vi.mocked(useAuth).mockReturnValue({ user: { id: 'user-1' } } as any);
+      vi.mocked(favoriteService.fetchFavoriteIds).mockResolvedValue(['listing-1']);
+      queryClient.setQueryData(['favorites', 'user-1'], ['listing-1']);
+      vi.mocked(favoriteService.removeFavorite).mockRejectedValue(new Error('API Error'));
+
+      const { result } = renderHook(() => useFavorites(), {
+        wrapper: createWrapper(),
+      });
+
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      });
+
+      act(() => {
+        result.current.toggleFavorite('listing-1');
+      });
+
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 10));
+      });
+
+      expect(mockToast).toHaveBeenCalledWith({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível remover dos favoritos.",
+      });
+      // The cache should be restored to contain listing-1
+      expect(queryClient.getQueryData(['favorites', 'user-1'])).toEqual(['listing-1']);
+    });
+  });
+
+  describe('isFavorite', () => {
+    it('should return true if listing is in favorites', async () => {
+      vi.mocked(useAuth).mockReturnValue({ user: { id: 'user-1' } } as any);
+      vi.mocked(favoriteService.fetchFavoriteIds).mockResolvedValue(['listing-1']);
+      queryClient.setQueryData(['favorites', 'user-1'], ['listing-1', 'listing-2']);
+
+      const { result } = renderHook(() => useFavorites(), {
+        wrapper: createWrapper(),
+      });
+
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      });
+
+      // The component state comes from the query data which we mocked
+      // In useFavorites, favoriteIds defaults to [] and is populated from useQuery
+      expect(result.current.isFavorite('listing-1')).toBe(true);
+      expect(result.current.isFavorite('listing-2')).toBe(false);
+    });
   });
 });
