@@ -43,6 +43,88 @@ describe('listingService', () => {
     vi.mocked(supabase.from).mockReturnValue(mockQueryBuilder as any);
   });
 
+  describe('createListing', () => {
+    const mockListingDTO = {
+      title: 'Test Listing',
+      description: 'Test Description',
+      price: 100,
+      category: 'Test Category',
+      subcategory: 'Test Subcategory',
+      location: 'Test Location',
+      bairro: 'Test Bairro',
+      images: ['image1.jpg']
+    };
+
+    it('throws an Error if the user is not authenticated', async () => {
+      vi.mocked(supabase.auth.getUser).mockResolvedValue({
+        data: { user: null },
+        error: null,
+      });
+
+      await expect(listingService.createListing(mockListingDTO)).rejects.toThrow('User not authenticated');
+    });
+
+    it('creates a listing successfully when user is authenticated', async () => {
+      vi.mocked(supabase.auth.getUser).mockResolvedValue({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        data: { user: { id: 'user-123' } as any },
+        error: null,
+      });
+
+      const mockInsertBuilder = {
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
+          data: {
+            id: 'listing-123',
+            ...mockListingDTO,
+            user_id: 'user-123',
+            status: 'active',
+            is_featured: false,
+            created_at: '2023-01-01T00:00:00.000Z',
+            updated_at: '2023-01-01T00:00:00.000Z',
+          },
+          error: null,
+        }),
+      };
+
+      vi.mocked(supabase.from).mockReturnValue({
+        insert: vi.fn().mockReturnValue(mockInsertBuilder),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
+
+      const result = await listingService.createListing(mockListingDTO);
+
+      expect(supabase.from).toHaveBeenCalledWith('listings');
+      expect(result.id).toBe('listing-123');
+      expect(result.title).toBe(mockListingDTO.title);
+      expect(result.userId).toBe('user-123');
+    });
+
+    it('throws an error if insertion fails', async () => {
+      vi.mocked(supabase.auth.getUser).mockResolvedValue({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        data: { user: { id: 'user-123' } as any },
+        error: null,
+      });
+
+      const mockError = new Error('Insert failed');
+      const mockInsertBuilder = {
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
+          data: null,
+          error: mockError,
+        }),
+      };
+
+      vi.mocked(supabase.from).mockReturnValue({
+        insert: vi.fn().mockReturnValue(mockInsertBuilder),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
+
+      await expect(listingService.createListing(mockListingDTO)).rejects.toThrow('Insert failed');
+    });
+  });
+
   describe('deleteListing', () => {
     it('logs an error when storage deletion fails but continues to delete the listing', async () => {
       // Setup mock for storage deletion failure
