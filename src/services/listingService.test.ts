@@ -89,7 +89,7 @@ describe('listingService', () => {
       await listingService.searchListings({});
 
       expect(supabase.from).toHaveBeenCalledWith('listings');
-      expect(mockQueryBuilder.select).toHaveBeenCalledWith('*');
+      expect(mockQueryBuilder.select).toHaveBeenCalledWith('id, title, description, price, category, subcategory, location, bairro, images, user_id, status, is_featured, created_at, updated_at');
       expect(mockQueryBuilder.eq).toHaveBeenCalledWith('status', 'active');
       expect(mockQueryBuilder.order).toHaveBeenCalledWith('created_at', { ascending: false });
 
