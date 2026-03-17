@@ -175,7 +175,9 @@ describe('listingService', () => {
         description: 'Test Description',
         price: 100,
         category: 'Test Category',
+        subcategory: 'Test Subcategory',
         location: 'Test Location',
+        bairro: 'Test Bairro',
         images: ['image1.jpg'],
         user_id: 'user-123',
         status: 'active',
@@ -199,7 +201,9 @@ describe('listingService', () => {
         description: 'Test Description',
         price: 100,
         category: 'Test Category',
+        subcategory: 'Test Subcategory',
         location: 'Test Location',
+        bairro: 'Test Bairro',
         images: ['image1.jpg'],
         userId: 'user-123',
         status: 'active',
@@ -216,7 +220,9 @@ describe('listingService', () => {
         description: null, // Null from DB
         price: 100,
         category: 'Test Category',
+        subcategory: 'Test Subcategory',
         location: 'Test Location',
+        bairro: 'Test Bairro',
         images: ['image1.jpg'],
         user_id: 'user-123',
         status: 'active',
@@ -239,7 +245,9 @@ describe('listingService', () => {
         description: 'Test Description',
         price: 100,
         category: 'Test Category',
+        subcategory: 'Test Subcategory',
         location: 'Test Location',
+        bairro: 'Test Bairro',
         images: null, // Null from DB
         user_id: 'user-123',
         status: 'active',
@@ -363,21 +371,20 @@ describe('listingService', () => {
     };
 
     it('throws an error if the user is not authenticated', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       vi.mocked(supabase.auth.getUser).mockResolvedValue({
         data: { user: null },
         error: null,
-      } as any);
+      });
 
       await expect(listingService.updateListing('listing-123', mockListingDto)).rejects.toThrow('User not authenticated');
     });
 
     it('throws an error if the update operation fails', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       vi.mocked(supabase.auth.getUser).mockResolvedValue({
-        data: { user: { id: 'user-123' } },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        data: { user: { id: 'user-123' } as any },
         error: null,
-      } as any);
+      });
 
       const mockError = { message: 'Update failed' };
       mockQueryBuilder.then.mockImplementation((resolve) => resolve({ data: null, error: mockError }));
@@ -386,11 +393,11 @@ describe('listingService', () => {
     });
 
     it('successfully updates and returns the listing', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       vi.mocked(supabase.auth.getUser).mockResolvedValue({
-        data: { user: { id: 'user-123' } },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        data: { user: { id: 'user-123' } as any },
         error: null,
-      } as any);
+      });
 
       const mockResponseData = {
         id: 'listing-123',
