@@ -148,6 +148,7 @@ describe('useFavorites', () => {
     });
 
     it('should revert cache and show toast when addFavorite fails', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       vi.mocked(useAuth).mockReturnValue({ user: { id: 'user-1' } } as any);
       vi.mocked(favoriteService.fetchFavoriteIds).mockResolvedValue([]);
       vi.mocked(favoriteService.addFavorite).mockRejectedValue(new Error('API Error'));
@@ -178,6 +179,7 @@ describe('useFavorites', () => {
     });
 
     it('should revert cache and show toast when removeFavorite fails', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       vi.mocked(useAuth).mockReturnValue({ user: { id: 'user-1' } } as any);
       vi.mocked(favoriteService.fetchFavoriteIds).mockResolvedValue(['listing-1']);
       queryClient.setQueryData(['favorites', 'user-1'], ['listing-1']);
@@ -211,6 +213,7 @@ describe('useFavorites', () => {
 
   describe('isFavorite', () => {
     it('should return true if listing is in favorites', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       vi.mocked(useAuth).mockReturnValue({ user: { id: 'user-1' } } as any);
       vi.mocked(favoriteService.fetchFavoriteIds).mockResolvedValue(['listing-1']);
       queryClient.setQueryData(['favorites', 'user-1'], ['listing-1', 'listing-2']);
