@@ -1,326 +1,137 @@
 import { CreateListingDTO, Listing, ListingStatus, SearchFilters } from "@/types/listing";
-import { supabase } from "@/integrations/supabase/client";
 
-interface ListingRow {
-  id: string;
-  title: string;
-  description: string | null;
-  price: number;
-  category: string;
-  subcategory?: string;
-  location: string;
-  bairro?: string;
-  images: string[] | null;
-  user_id: string;
-  status: string;
-  is_featured: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-const LISTING_COLUMNS = 'id, title, description, price, category, subcategory, location, bairro, images, user_id, status, is_featured, created_at, updated_at';
+// Mock Data
+const MOCK_LISTINGS: Listing[] = [
+  {
+    id: "mock-listing-1",
+    title: "Mock Apartment",
+    description: "A beautiful mock apartment in the center of the city.",
+    price: 1500,
+    category: "Real Estate",
+    subcategory: "Apartment",
+    location: "São Paulo, SP",
+    bairro: "Centro",
+    images: [],
+    userId: "mock-user-123",
+    status: "active",
+    isFeatured: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "mock-listing-2",
+    title: "Mock Used Car",
+    description: "In excellent condition.",
+    price: 30000,
+    category: "Vehicles",
+    subcategory: "Cars",
+    location: "Rio de Janeiro, RJ",
+    bairro: "Copacabana",
+    images: [],
+    userId: "mock-user-456",
+    status: "active",
+    isFeatured: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+];
 
 export const listingService = {
   async fetchFeatured(): Promise<Listing[]> {
-    const { data, error } = await supabase
-      .from('listings')
-      .select(LISTING_COLUMNS)
-      .eq('status', 'active')
-      .order('is_featured', { ascending: false })
-      .order('created_at', { ascending: false })
-      .limit(8);
-
-    if (error) {
-      console.error('Error fetching featured listings:', error);
-      throw error;
-    }
-
-    return (data as ListingRow[]).map((item) => ({
-      id: item.id,
-      title: item.title,
-      description: item.description || undefined,
-      price: item.price,
-      category: item.category,
-      subcategory: item.subcategory || undefined,
-      location: item.location,
-      bairro: item.bairro || undefined,
-      images: item.images || [],
-      userId: item.user_id,
-      status: item.status as ListingStatus,
-      isFeatured: item.is_featured,
-      createdAt: item.created_at,
-      updatedAt: item.updated_at,
-    }));
+    return MOCK_LISTINGS.filter(l => l.isFeatured);
   },
 
   async fetchDetails(id: string): Promise<Listing | null> {
-    const { data, error } = await supabase
-      .from('listings')
-      .select(LISTING_COLUMNS)
-      .eq('id', id)
-      .single();
-
-    if (error) {
-      console.error('Error fetching listing details:', error);
-      return null;
-    }
-
-    const item = data as unknown as ListingRow;
-
-    return {
-      id: item.id,
-      title: item.title,
-      description: item.description || undefined,
-      price: item.price,
-      category: item.category,
-      subcategory: item.subcategory || undefined,
-      location: item.location,
-      bairro: item.bairro || undefined,
-      images: item.images || [],
-      userId: item.user_id,
-      status: item.status as ListingStatus,
-      isFeatured: item.is_featured,
-      createdAt: item.created_at,
-      updatedAt: item.updated_at,
-    };
+    return MOCK_LISTINGS.find(l => l.id === id) || MOCK_LISTINGS[0] || null;
   },
 
   async searchListings(filters: SearchFilters): Promise<Listing[]> {
-    let query = supabase
-      .from('listings')
-      .select(LISTING_COLUMNS)
-      .eq('status', 'active')
-      .order('created_at', { ascending: false });
+    let results = MOCK_LISTINGS;
 
     if (filters.query) {
-      query = query.ilike('title', `%${filters.query}%`);
+      const q = filters.query.toLowerCase();
+      results = results.filter(l => l.title.toLowerCase().includes(q) || (l.description && l.description.toLowerCase().includes(q)));
     }
 
     if (filters.category) {
-      query = query.eq('category', filters.category);
+      results = results.filter(l => l.category === filters.category);
     }
 
     if (filters.subcategory) {
-      // Assuming a 'subcategory' column might exist or will be added
-      // If it doesn't exist, this will gracefully return an error or skip results
-      // @ts-expect-error property does not yet exist in Database definitions
-      query = query.eq('subcategory', filters.subcategory);
+      results = results.filter(l => l.subcategory === filters.subcategory);
     }
 
     if (filters.location) {
-      query = query.ilike('location', `%${filters.location}%`);
+      const loc = filters.location.toLowerCase();
+      results = results.filter(l => l.location.toLowerCase().includes(loc));
     }
 
     if (filters.bairros && filters.bairros.length > 0) {
-      // Depending on db schema, if bairros are stored in a 'bairro' column
-      // we can do an 'in' query.
-      // @ts-expect-error property does not yet exist in Database definitions
-      query = query.in('bairro', filters.bairros);
+      results = results.filter(l => l.bairro && filters.bairros!.includes(l.bairro));
     }
 
     if (filters.minPrice !== undefined) {
-      query = query.gte('price', filters.minPrice);
+      results = results.filter(l => l.price >= filters.minPrice!);
     }
 
     if (filters.maxPrice !== undefined) {
-      query = query.lte('price', filters.maxPrice);
+      results = results.filter(l => l.price <= filters.maxPrice!);
     }
 
-    const { data, error } = await query;
-
-    if (error) {
-      console.error('Error searching listings:', error);
-      throw error;
-    }
-
-    return (data as ListingRow[]).map((item) => ({
-      id: item.id,
-      title: item.title,
-      description: item.description || undefined,
-      price: item.price,
-      category: item.category,
-      location: item.location,
-      images: item.images || [],
-      userId: item.user_id,
-      status: item.status as ListingStatus,
-      isFeatured: item.is_featured,
-      createdAt: item.created_at,
-      updatedAt: item.updated_at,
-    }));
+    return results;
   },
 
   async fetchUserListings(userId: string): Promise<Listing[]> {
-    const { data, error } = await supabase
-      .from('listings')
-      .select(LISTING_COLUMNS)
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching user listings:', error);
-      throw error;
-    }
-
-    return (data as ListingRow[]).map((item) => ({
-      id: item.id,
-      title: item.title,
-      description: item.description || undefined,
-      price: item.price,
-      category: item.category,
-      location: item.location,
-      images: item.images || [],
-      userId: item.user_id,
-      status: item.status as ListingStatus,
-      isFeatured: item.is_featured,
-      createdAt: item.created_at,
-      updatedAt: item.updated_at,
-    }));
+    // In a mock scenario, we might just return everything or filter if we want realism
+    return MOCK_LISTINGS;
   },
 
   async uploadListingImage(file: File): Promise<string> {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${crypto.randomUUID()}.${fileExt}`;
-    const filePath = `${fileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from('listing-images')
-      .upload(filePath, file);
-
-    if (uploadError) {
-      throw uploadError;
-    }
-
-    const { data } = supabase.storage
-      .from('listing-images')
-      .getPublicUrl(filePath);
-
-    return data.publicUrl;
+    return URL.createObjectURL(file);
   },
 
   async deleteListing(id: string, imageUrls: string[]): Promise<void> {
-    // Delete images from storage first
-    if (imageUrls && imageUrls.length > 0) {
-      const paths = imageUrls.map((url) => {
-        try {
-            const urlObj = new URL(url);
-            // Path is typically /storage/v1/object/public/listing-images/<filename>
-            const pathParts = urlObj.pathname.split('/');
-            return pathParts[pathParts.length - 1]; // filename
-        } catch (e) {
-            console.error("Error parsing URL for deletion", url);
-            return null;
-        }
-      }).filter(Boolean) as string[];
-
-      if (paths.length > 0) {
-        const { error: storageError } = await supabase.storage
-            .from('listing-images')
-            .remove(paths);
-        
-        if (storageError) {
-            console.error('Error deleting images:', storageError);
-        }
-      }
-    }
-
-    const { error } = await supabase
-      .from('listings')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error deleting listing:', error);
-      throw error;
-    }
+    console.log(`Mock deleteListing called for ${id}`);
+    return Promise.resolve();
   },
 
   async createListing(listing: CreateListingDTO): Promise<Listing> {
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) throw new Error('User not authenticated');
-
-    // @ts-expect-error missing subcategory and bairro in DB types
-    const { data, error } = await supabase
-      .from('listings')
-      .insert({
-        title: listing.title,
-        description: listing.description,
-        price: listing.price,
-        category: listing.category,
-        subcategory: listing.subcategory,
-        location: listing.location,
-        bairro: listing.bairro,
-        images: listing.images,
-        user_id: user.id,
-      })
-      .select(LISTING_COLUMNS)
-      .single();
-
-    if (error) throw error;
-
-    const item = data as unknown as ListingRow;
-
+    console.log(`Mock createListing called for ${listing.title}`);
     return {
-      id: item.id,
-      title: item.title,
-      description: item.description || undefined,
-      price: item.price,
-      category: item.category,
-      subcategory: item.subcategory || undefined,
-      location: item.location,
-      bairro: item.bairro || undefined,
-      images: item.images || [],
-      userId: item.user_id,
-      status: item.status as ListingStatus,
-      isFeatured: item.is_featured,
-      createdAt: item.created_at,
-      updatedAt: item.updated_at,
+      id: `mock-listing-${Date.now()}`,
+      title: listing.title,
+      description: listing.description || undefined,
+      price: listing.price,
+      category: listing.category,
+      subcategory: listing.subcategory || undefined,
+      location: listing.location,
+      bairro: listing.bairro || undefined,
+      images: listing.images || [],
+      userId: "mock-user-123",
+      status: "active" as ListingStatus,
+      isFeatured: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
   },
 
   async updateListing(id: string, listing: CreateListingDTO): Promise<Listing> {
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) throw new Error('User not authenticated');
-
-    // @ts-expect-error missing subcategory and bairro in DB types
-    const { data, error } = await supabase
-      .from('listings')
-      .update({
-        title: listing.title,
-        description: listing.description,
-        price: listing.price,
-        category: listing.category,
-        subcategory: listing.subcategory,
-        location: listing.location,
-        bairro: listing.bairro,
-        images: listing.images,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', id)
-      .eq('user_id', user.id)
-      .select(LISTING_COLUMNS)
-      .single();
-
-    if (error) throw error;
-
-    const item = data as unknown as ListingRow;
-
+    console.log(`Mock updateListing called for ${id}`);
     return {
-      id: item.id,
-      title: item.title,
-      description: item.description || undefined,
-      price: item.price,
-      category: item.category,
-      subcategory: item.subcategory || undefined,
-      location: item.location,
-      bairro: item.bairro || undefined,
-      images: item.images || [],
-      userId: item.user_id,
-      status: item.status as ListingStatus,
-      isFeatured: item.is_featured,
-      createdAt: item.created_at,
-      updatedAt: item.updated_at,
+      id: id,
+      title: listing.title,
+      description: listing.description || undefined,
+      price: listing.price,
+      category: listing.category,
+      subcategory: listing.subcategory || undefined,
+      location: listing.location,
+      bairro: listing.bairro || undefined,
+      images: listing.images || [],
+      userId: "mock-user-123",
+      status: "active" as ListingStatus,
+      isFeatured: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
   },
 };
