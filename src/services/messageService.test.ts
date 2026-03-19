@@ -1,23 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { messageService } from './messageService';
-import { supabase } from '@/integrations/supabase/client';
-
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    from: vi.fn(),
-  },
-}));
 
 describe('messageService', () => {
+  let mockFetch: ReturnType<typeof vi.fn>;
+
   describe('fetchInbox', () => {
     beforeEach(() => {
       vi.clearAllMocks();
-      // Suppress console.error in tests to keep output clean
       vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ items: [] }),
+      });
+      global.fetch = mockFetch;
     });
 
     it('should successfully fetch and group messages by listingId', async () => {
-      // Mock data representing a typical Supabase join response
       const mockMessages = [
         {
           id: 'msg-1',
@@ -48,23 +47,15 @@ describe('messageService', () => {
         },
       ];
 
-      const mockOrder = vi.fn().mockResolvedValue({ data: mockMessages, error: null });
-      const mockEq = vi.fn().mockReturnValue({ order: mockOrder });
-      const mockSelect = vi.fn().mockReturnValue({ eq: mockEq });
-
-      vi.mocked(supabase.from).mockReturnValue({
-        select: mockSelect,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ items: mockMessages }),
+      });
 
       const result = await messageService.fetchInbox('receiver-id');
 
-      expect(supabase.from).toHaveBeenCalledWith('messages');
-      expect(mockSelect).toHaveBeenCalled();
-      expect(mockEq).toHaveBeenCalledWith('receiver_id', 'receiver-id');
-      expect(mockOrder).toHaveBeenCalledWith('created_at', { ascending: false });
+      expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('/messages/inbox/receiver-id'));
 
-      // Check grouping logic
       expect(result).toHaveLength(2);
 
       const listing1Group = result.find(g => g.listingId === 'listing-1');
@@ -82,7 +73,6 @@ describe('messageService', () => {
     });
 
     it('should handle missing relationships gracefully (null listings/profiles)', async () => {
-      // Missing joined data
       const mockMessages = [
         {
           id: 'msg-1',
@@ -90,57 +80,42 @@ describe('messageService', () => {
           created_at: '2023-01-01T10:00:00Z',
           listing_id: 'listing-1',
           sender_id: 'user-1',
-          listings: null, // Listing deleted
-          profiles: null, // Profile deleted
+          listings: null,
+          profiles: null,
         },
       ];
 
-      const mockOrder = vi.fn().mockResolvedValue({ data: mockMessages, error: null });
-      const mockEq = vi.fn().mockReturnValue({ order: mockOrder });
-      const mockSelect = vi.fn().mockReturnValue({ eq: mockEq });
-
-      vi.mocked(supabase.from).mockReturnValue({
-        select: mockSelect,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ items: mockMessages }),
+      });
 
       const result = await messageService.fetchInbox('receiver-id');
 
       expect(result).toHaveLength(1);
       expect(result[0].listingId).toBe('listing-1');
-      expect(result[0].listingTitle).toBe('Anúncio indisponível'); // Fallback title
+      expect(result[0].listingTitle).toBe('Anúncio indisponível');
       expect(result[0].messages).toHaveLength(1);
-      expect(result[0].messages[0].senderName).toBe('Usuário'); // Fallback name
+      expect(result[0].messages[0].senderName).toBe('Usuário');
     });
 
     it('should return empty array when no messages exist', async () => {
-      const mockOrder = vi.fn().mockResolvedValue({ data: [], error: null });
-      const mockEq = vi.fn().mockReturnValue({ order: mockOrder });
-      const mockSelect = vi.fn().mockReturnValue({ eq: mockEq });
-
-      vi.mocked(supabase.from).mockReturnValue({
-        select: mockSelect,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ items: [] }),
+      });
 
       const result = await messageService.fetchInbox('receiver-id');
-
       expect(result).toEqual([]);
     });
 
-    it('should throw an error when Supabase fetch fails', async () => {
-      const mockError = new Error('Supabase fetch failed');
-      const mockOrder = vi.fn().mockResolvedValue({ data: null, error: mockError });
-      const mockEq = vi.fn().mockReturnValue({ order: mockOrder });
-      const mockSelect = vi.fn().mockReturnValue({ eq: mockEq });
+    it('should throw an error when fetch fails', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+      });
 
-      vi.mocked(supabase.from).mockReturnValue({
-        select: mockSelect,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
-
-      await expect(messageService.fetchInbox('receiver-id')).rejects.toThrow('Supabase fetch failed');
-      expect(console.error).toHaveBeenCalledWith('Error fetching inbox:', mockError);
+      await expect(messageService.fetchInbox('receiver-id')).rejects.toThrow('Failed to fetch inbox');
+      expect(console.error).toHaveBeenCalled();
     });
   });
 });

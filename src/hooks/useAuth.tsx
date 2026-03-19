@@ -1,6 +1,17 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+
+export interface User {
+  id: string;
+  email?: string;
+  user_metadata?: {
+    full_name?: string;
+  };
+}
+
+export interface Session {
+  access_token: string;
+  user: User;
+}
 
 interface AuthContextType {
   user: User | null;
@@ -20,67 +31,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    );
+    // Mock user for frontend-only application
+    const mockUser: User = {
+      id: 'mock-user-123',
+      email: 'user@example.com',
+      user_metadata: { full_name: 'Mock User' },
+    };
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    const mockSession: Session = {
+      access_token: 'mock-token',
+      user: mockUser,
+    };
 
-    return () => subscription.unsubscribe();
+    setSession(mockSession);
+    setUser(mockUser);
+    setLoading(false);
   }, []);
 
   const signUp = async (email: string, password: string, fullName?: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          full_name: fullName || '',
-        },
-      },
-    });
-    
-    // Check if email confirmation is required
-    const needsVerification = !error && data.user && !data.session;
-    
-    return { error: error as Error | null, needsVerification };
+    return { error: null, needsVerification: false };
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    
-    return { error: error as Error | null };
+    return { error: null };
   };
 
   const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/`,
-      },
-    });
-    
-    return { error: error as Error | null };
+    return { error: null };
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    setSession(null);
+    setUser(null);
   };
 
   return (

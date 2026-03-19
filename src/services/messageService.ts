@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 export interface Profile {
   id: string;
@@ -44,99 +44,93 @@ interface MessageRow {
 
 export const messageService = {
   async fetchSellerProfile(userId: string): Promise<Profile | null> {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
+    try {
+      const response = await fetch(`${API_URL}/profiles/${userId}`);
+      if (!response.ok) {
+        if (response.status === 404) return null;
+        throw new Error('Failed to fetch seller profile');
+      }
 
-    if (error) {
+      const data = await response.json();
+      return data as Profile;
+    } catch (error) {
       console.error('Error fetching seller profile:', error);
       return null;
     }
-
-    return data as Profile;
   },
 
   async updateProfile(userId: string, data: Partial<Profile>): Promise<void> {
-    const { error } = await supabase
-      .from('profiles')
-      .update(data)
-      .eq('id', userId);
+    try {
+      const response = await fetch(`${API_URL}/profiles/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
 
-    if (error) {
+      if (!response.ok) throw new Error('Failed to update profile');
+    } catch (error) {
       console.error('Error updating profile:', error);
       throw error;
     }
   },
 
   async sendMessage(listingId: string, receiverId: string, content: string): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) throw new Error('User not authenticated');
-
-    const { error } = await supabase
-      .from('messages')
-      .insert({
-        listing_id: listingId,
-        sender_id: user.id,
-        receiver_id: receiverId,
-        content,
+    try {
+      const response = await fetch(`${API_URL}/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          listing_id: listingId,
+          sender_id: 'mock-user-123', // Static mock user ID
+          receiver_id: receiverId,
+          content,
+        }),
       });
 
-    if (error) {
+      if (!response.ok) throw new Error('Failed to send message');
+    } catch (error) {
       console.error('Error sending message:', error);
       throw error;
     }
   },
 
   async fetchInbox(userId: string): Promise<InboxItem[]> {
-    // Fetch messages where user is receiver
-    const { data: messages, error } = await supabase
-      .from('messages')
-      .select(`
-        id,
-        content,
-        created_at,
-        listing_id,
-        sender_id,
-        listings:listing_id (
-          title
-        ),
-        profiles:sender_id (
-          full_name
-        )
-      `)
-      .eq('receiver_id', userId)
-      .order('created_at', { ascending: false });
+    try {
+      // Fetch messages where user is receiver
+      const response = await fetch(`${API_URL}/messages/inbox/${userId}`);
+      if (!response.ok) throw new Error('Failed to fetch inbox');
 
-    if (error) {
+      const data = await response.json();
+      const messageRows: MessageRow[] = data.items || [];
+
+      const grouped = messageRows.reduce((acc: Record<string, InboxItem>, msg) => {
+        const listingId = msg.listing_id;
+        if (!acc[listingId]) {
+          acc[listingId] = {
+            listingId,
+            listingTitle: msg.listings?.title || 'Anúncio indisponível',
+            messages: [],
+          };
+        }
+
+        acc[listingId].messages.push({
+          id: msg.id,
+          content: msg.content,
+          senderName: msg.profiles?.full_name || 'Usuário',
+          createdAt: msg.created_at,
+        });
+
+        return acc;
+      }, {});
+
+      return Object.values(grouped);
+    } catch (error) {
       console.error('Error fetching inbox:', error);
       throw error;
     }
-
-    const messageRows = messages as unknown as MessageRow[];
-
-    const grouped = messageRows.reduce((acc: Record<string, InboxItem>, msg) => {
-      const listingId = msg.listing_id;
-      if (!acc[listingId]) {
-        acc[listingId] = {
-          listingId,
-          listingTitle: msg.listings?.title || 'Anúncio indisponível',
-          messages: [],
-        };
-      }
-
-      acc[listingId].messages.push({
-        id: msg.id,
-        content: msg.content,
-        senderName: msg.profiles?.full_name || 'Usuário',
-        createdAt: msg.created_at,
-      });
-
-      return acc;
-    }, {});
-
-    return Object.values(grouped);
   },
 };

@@ -1,5 +1,4 @@
 import { CreateListingDTO, Listing, ListingStatus, SearchFilters } from "@/types/listing";
-import { supabase } from "@/integrations/supabase/client";
 
 interface ListingRow {
   id: string;
@@ -18,309 +17,233 @@ interface ListingRow {
   updated_at: string;
 }
 
-const LISTING_COLUMNS = 'id, title, description, price, category, subcategory, location, bairro, images, user_id, status, is_featured, created_at, updated_at';
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 export const listingService = {
   async fetchFeatured(): Promise<Listing[]> {
-    const { data, error } = await supabase
-      .from('listings')
-      .select(LISTING_COLUMNS)
-      .eq('status', 'active')
-      .order('is_featured', { ascending: false })
-      .order('created_at', { ascending: false })
-      .limit(8);
+    try {
+      const response = await fetch(`${API_URL}/listings/featured`);
+      if (!response.ok) throw new Error('Failed to fetch featured listings');
 
-    if (error) {
+      const data = await response.json();
+      const items: ListingRow[] = data.items || [];
+
+      return items.map((item) => ({
+        id: item.id,
+        title: item.title,
+        description: item.description || undefined,
+        price: item.price,
+        category: item.category,
+        subcategory: item.subcategory || undefined,
+        location: item.location,
+        bairro: item.bairro || undefined,
+        images: item.images || [],
+        userId: item.user_id,
+        status: item.status as ListingStatus,
+        isFeatured: item.is_featured,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at,
+      }));
+    } catch (error) {
       console.error('Error fetching featured listings:', error);
       throw error;
     }
-
-    return (data as ListingRow[]).map((item) => ({
-      id: item.id,
-      title: item.title,
-      description: item.description || undefined,
-      price: item.price,
-      category: item.category,
-      subcategory: item.subcategory || undefined,
-      location: item.location,
-      bairro: item.bairro || undefined,
-      images: item.images || [],
-      userId: item.user_id,
-      status: item.status as ListingStatus,
-      isFeatured: item.is_featured,
-      createdAt: item.created_at,
-      updatedAt: item.updated_at,
-    }));
   },
 
   async fetchDetails(id: string): Promise<Listing | null> {
-    const { data, error } = await supabase
-      .from('listings')
-      .select(LISTING_COLUMNS)
-      .eq('id', id)
-      .single();
+    try {
+      const response = await fetch(`${API_URL}/listings/${id}`);
+      if (!response.ok) {
+        if (response.status === 404) return null;
+        throw new Error('Failed to fetch listing details');
+      }
 
-    if (error) {
+      const item: ListingRow = await response.json();
+
+      return {
+        id: item.id,
+        title: item.title,
+        description: item.description || undefined,
+        price: item.price,
+        category: item.category,
+        subcategory: item.subcategory || undefined,
+        location: item.location,
+        bairro: item.bairro || undefined,
+        images: item.images || [],
+        userId: item.user_id,
+        status: item.status as ListingStatus,
+        isFeatured: item.is_featured,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at,
+      };
+    } catch (error) {
       console.error('Error fetching listing details:', error);
       return null;
     }
-
-    const item = data as unknown as ListingRow;
-
-    return {
-      id: item.id,
-      title: item.title,
-      description: item.description || undefined,
-      price: item.price,
-      category: item.category,
-      subcategory: item.subcategory || undefined,
-      location: item.location,
-      bairro: item.bairro || undefined,
-      images: item.images || [],
-      userId: item.user_id,
-      status: item.status as ListingStatus,
-      isFeatured: item.is_featured,
-      createdAt: item.created_at,
-      updatedAt: item.updated_at,
-    };
   },
 
   async searchListings(filters: SearchFilters): Promise<Listing[]> {
-    let query = supabase
-      .from('listings')
-      .select(LISTING_COLUMNS)
-      .eq('status', 'active')
-      .order('created_at', { ascending: false });
+    try {
+      const params = new URLSearchParams();
+      if (filters.query) params.append('query', filters.query);
+      if (filters.category) params.append('category', filters.category);
+      if (filters.subcategory) params.append('subcategory', filters.subcategory);
+      if (filters.location) params.append('location', filters.location);
+      if (filters.bairros && filters.bairros.length > 0) {
+        params.append('bairros', filters.bairros.join(','));
+      }
+      if (filters.minPrice !== undefined) params.append('minPrice', filters.minPrice.toString());
+      if (filters.maxPrice !== undefined) params.append('maxPrice', filters.maxPrice.toString());
 
-    if (filters.query) {
-      query = query.ilike('title', `%${filters.query}%`);
-    }
+      const response = await fetch(`${API_URL}/listings/search?${params.toString()}`);
+      if (!response.ok) throw new Error('Failed to search listings');
 
-    if (filters.category) {
-      query = query.eq('category', filters.category);
-    }
+      const data = await response.json();
+      const items: ListingRow[] = data.items || [];
 
-    if (filters.subcategory) {
-      // Assuming a 'subcategory' column might exist or will be added
-      // If it doesn't exist, this will gracefully return an error or skip results
-      // @ts-expect-error property does not yet exist in Database definitions
-      query = query.eq('subcategory', filters.subcategory);
-    }
-
-    if (filters.location) {
-      query = query.ilike('location', `%${filters.location}%`);
-    }
-
-    if (filters.bairros && filters.bairros.length > 0) {
-      // Depending on db schema, if bairros are stored in a 'bairro' column
-      // we can do an 'in' query.
-      // @ts-expect-error property does not yet exist in Database definitions
-      query = query.in('bairro', filters.bairros);
-    }
-
-    if (filters.minPrice !== undefined) {
-      query = query.gte('price', filters.minPrice);
-    }
-
-    if (filters.maxPrice !== undefined) {
-      query = query.lte('price', filters.maxPrice);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
+      return items.map((item) => ({
+        id: item.id,
+        title: item.title,
+        description: item.description || undefined,
+        price: item.price,
+        category: item.category,
+        location: item.location,
+        images: item.images || [],
+        userId: item.user_id,
+        status: item.status as ListingStatus,
+        isFeatured: item.is_featured,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at,
+      }));
+    } catch (error) {
       console.error('Error searching listings:', error);
       throw error;
     }
-
-    return (data as ListingRow[]).map((item) => ({
-      id: item.id,
-      title: item.title,
-      description: item.description || undefined,
-      price: item.price,
-      category: item.category,
-      location: item.location,
-      images: item.images || [],
-      userId: item.user_id,
-      status: item.status as ListingStatus,
-      isFeatured: item.is_featured,
-      createdAt: item.created_at,
-      updatedAt: item.updated_at,
-    }));
   },
 
   async fetchUserListings(userId: string): Promise<Listing[]> {
-    const { data, error } = await supabase
-      .from('listings')
-      .select(LISTING_COLUMNS)
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+    try {
+      const response = await fetch(`${API_URL}/listings/user/${userId}`);
+      if (!response.ok) throw new Error('Failed to fetch user listings');
 
-    if (error) {
+      const data = await response.json();
+      const items: ListingRow[] = data.items || [];
+
+      return items.map((item) => ({
+        id: item.id,
+        title: item.title,
+        description: item.description || undefined,
+        price: item.price,
+        category: item.category,
+        location: item.location,
+        images: item.images || [],
+        userId: item.user_id,
+        status: item.status as ListingStatus,
+        isFeatured: item.is_featured,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at,
+      }));
+    } catch (error) {
       console.error('Error fetching user listings:', error);
       throw error;
     }
-
-    return (data as ListingRow[]).map((item) => ({
-      id: item.id,
-      title: item.title,
-      description: item.description || undefined,
-      price: item.price,
-      category: item.category,
-      location: item.location,
-      images: item.images || [],
-      userId: item.user_id,
-      status: item.status as ListingStatus,
-      isFeatured: item.is_featured,
-      createdAt: item.created_at,
-      updatedAt: item.updated_at,
-    }));
   },
 
   async uploadListingImage(file: File): Promise<string> {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${crypto.randomUUID()}.${fileExt}`;
-    const filePath = `${fileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from('listing-images')
-      .upload(filePath, file);
-
-    if (uploadError) {
-      throw uploadError;
-    }
-
-    const { data } = supabase.storage
-      .from('listing-images')
-      .getPublicUrl(filePath);
-
-    return data.publicUrl;
+    // In a real implementation this would upload the file to your backend
+    // and return the new URL. Since there's no supabase anymore, we'll
+    // simulate a successful upload returning a dummy URL.
+    return URL.createObjectURL(file);
   },
 
   async deleteListing(id: string, imageUrls: string[]): Promise<void> {
-    // Delete images from storage first
-    if (imageUrls && imageUrls.length > 0) {
-      const paths = imageUrls.map((url) => {
-        try {
-            const urlObj = new URL(url);
-            // Path is typically /storage/v1/object/public/listing-images/<filename>
-            const pathParts = urlObj.pathname.split('/');
-            return pathParts[pathParts.length - 1]; // filename
-        } catch (e) {
-            console.error("Error parsing URL for deletion", url);
-            return null;
-        }
-      }).filter(Boolean) as string[];
+    try {
+      const response = await fetch(`${API_URL}/listings/${id}`, {
+        method: 'DELETE',
+      });
 
-      if (paths.length > 0) {
-        const { error: storageError } = await supabase.storage
-            .from('listing-images')
-            .remove(paths);
-        
-        if (storageError) {
-            console.error('Error deleting images:', storageError);
-        }
-      }
-    }
-
-    const { error } = await supabase
-      .from('listings')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
+      if (!response.ok) throw new Error('Failed to delete listing');
+    } catch (error) {
       console.error('Error deleting listing:', error);
       throw error;
     }
   },
 
   async createListing(listing: CreateListingDTO): Promise<Listing> {
-    const { data: { user } } = await supabase.auth.getUser();
+    try {
+      const response = await fetch(`${API_URL}/listings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...listing,
+          user_id: 'mock-user-123', // Static mock user ID
+        }),
+      });
 
-    if (!user) throw new Error('User not authenticated');
+      if (!response.ok) throw new Error('Failed to create listing');
 
-    // @ts-expect-error missing subcategory and bairro in DB types
-    const { data, error } = await supabase
-      .from('listings')
-      .insert({
-        title: listing.title,
-        description: listing.description,
-        price: listing.price,
-        category: listing.category,
-        subcategory: listing.subcategory,
-        location: listing.location,
-        bairro: listing.bairro,
-        images: listing.images,
-        user_id: user.id,
-      })
-      .select(LISTING_COLUMNS)
-      .single();
+      const item: ListingRow = await response.json();
 
-    if (error) throw error;
-
-    const item = data as unknown as ListingRow;
-
-    return {
-      id: item.id,
-      title: item.title,
-      description: item.description || undefined,
-      price: item.price,
-      category: item.category,
-      subcategory: item.subcategory || undefined,
-      location: item.location,
-      bairro: item.bairro || undefined,
-      images: item.images || [],
-      userId: item.user_id,
-      status: item.status as ListingStatus,
-      isFeatured: item.is_featured,
-      createdAt: item.created_at,
-      updatedAt: item.updated_at,
-    };
+      return {
+        id: item.id,
+        title: item.title,
+        description: item.description || undefined,
+        price: item.price,
+        category: item.category,
+        subcategory: item.subcategory || undefined,
+        location: item.location,
+        bairro: item.bairro || undefined,
+        images: item.images || [],
+        userId: item.user_id,
+        status: item.status as ListingStatus,
+        isFeatured: item.is_featured,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at,
+      };
+    } catch (error) {
+      console.error('Error creating listing:', error);
+      throw error;
+    }
   },
 
   async updateListing(id: string, listing: CreateListingDTO): Promise<Listing> {
-    const { data: { user } } = await supabase.auth.getUser();
+    try {
+      const response = await fetch(`${API_URL}/listings/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...listing,
+          user_id: 'mock-user-123', // Static mock user ID
+        }),
+      });
 
-    if (!user) throw new Error('User not authenticated');
+      if (!response.ok) throw new Error('Failed to update listing');
 
-    // @ts-expect-error missing subcategory and bairro in DB types
-    const { data, error } = await supabase
-      .from('listings')
-      .update({
-        title: listing.title,
-        description: listing.description,
-        price: listing.price,
-        category: listing.category,
-        subcategory: listing.subcategory,
-        location: listing.location,
-        bairro: listing.bairro,
-        images: listing.images,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', id)
-      .eq('user_id', user.id)
-      .select(LISTING_COLUMNS)
-      .single();
+      const item: ListingRow = await response.json();
 
-    if (error) throw error;
-
-    const item = data as unknown as ListingRow;
-
-    return {
-      id: item.id,
-      title: item.title,
-      description: item.description || undefined,
-      price: item.price,
-      category: item.category,
-      subcategory: item.subcategory || undefined,
-      location: item.location,
-      bairro: item.bairro || undefined,
-      images: item.images || [],
-      userId: item.user_id,
-      status: item.status as ListingStatus,
-      isFeatured: item.is_featured,
-      createdAt: item.created_at,
-      updatedAt: item.updated_at,
-    };
+      return {
+        id: item.id,
+        title: item.title,
+        description: item.description || undefined,
+        price: item.price,
+        category: item.category,
+        subcategory: item.subcategory || undefined,
+        location: item.location,
+        bairro: item.bairro || undefined,
+        images: item.images || [],
+        userId: item.user_id,
+        status: item.status as ListingStatus,
+        isFeatured: item.is_featured,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at,
+      };
+    } catch (error) {
+      console.error('Error updating listing:', error);
+      throw error;
+    }
   },
 };

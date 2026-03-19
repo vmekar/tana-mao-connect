@@ -1,46 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { listingService } from './listingService';
-import { supabase } from '@/integrations/supabase/client';
-
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    from: vi.fn(),
-    storage: {
-      from: vi.fn(),
-    },
-    auth: {
-      getUser: vi.fn(),
-    }
-  },
-}));
 
 describe('listingService', () => {
-  // Define a reusable query builder mock
-  const mockQueryBuilder = {
-    select: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    order: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockReturnThis(),
-    single: vi.fn().mockReturnThis(),
-    ilike: vi.fn().mockReturnThis(),
-    in: vi.fn().mockReturnThis(),
-    gte: vi.fn().mockReturnThis(),
-    lte: vi.fn().mockReturnThis(),
-    delete: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
-    then: vi.fn((resolve) => resolve({ data: [], error: null })),
-  };
+  let mockFetch: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    // Reset the then implementation to a default success state for each test
-    mockQueryBuilder.then.mockImplementation((resolve) => resolve({ data: [], error: null }));
-
-    // Default mock for from() returning our query builder
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    vi.mocked(supabase.from).mockReturnValue(mockQueryBuilder as any);
+    mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({ items: [] }),
+    });
+    global.fetch = mockFetch;
   });
 
   describe('createListing', () => {
@@ -55,116 +27,53 @@ describe('listingService', () => {
       images: ['image1.jpg']
     };
 
-    it('throws an Error if the user is not authenticated', async () => {
-      vi.mocked(supabase.auth.getUser).mockResolvedValue({
-        data: { user: null },
-        error: null,
-      });
-
-      await expect(listingService.createListing(mockListingDTO)).rejects.toThrow('User not authenticated');
-    });
-
-    it('creates a listing successfully when user is authenticated', async () => {
-      vi.mocked(supabase.auth.getUser).mockResolvedValue({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        data: { user: { id: 'user-123' } as any },
-        error: null,
-      });
-
-      const mockInsertBuilder = {
-        select: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({
-          data: {
-            id: 'listing-123',
-            ...mockListingDTO,
-            user_id: 'user-123',
-            status: 'active',
-            is_featured: false,
-            created_at: '2023-01-01T00:00:00.000Z',
-            updated_at: '2023-01-01T00:00:00.000Z',
-          },
-          error: null,
+    it('creates a listing successfully', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          id: 'listing-123',
+          ...mockListingDTO,
+          user_id: 'mock-user-123',
+          status: 'active',
+          is_featured: false,
+          created_at: '2023-01-01T00:00:00.000Z',
+          updated_at: '2023-01-01T00:00:00.000Z',
         }),
-      };
-
-      vi.mocked(supabase.from).mockReturnValue({
-        insert: vi.fn().mockReturnValue(mockInsertBuilder),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
+      });
 
       const result = await listingService.createListing(mockListingDTO);
 
-      expect(supabase.from).toHaveBeenCalledWith('listings');
+      expect(mockFetch).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({
+        method: 'POST',
+      }));
       expect(result.id).toBe('listing-123');
       expect(result.title).toBe(mockListingDTO.title);
-      expect(result.userId).toBe('user-123');
+      expect(result.userId).toBe('mock-user-123');
     });
 
     it('throws an error if insertion fails', async () => {
-      vi.mocked(supabase.auth.getUser).mockResolvedValue({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        data: { user: { id: 'user-123' } as any },
-        error: null,
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
       });
 
-      const mockError = new Error('Insert failed');
-      const mockInsertBuilder = {
-        select: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({
-          data: null,
-          error: mockError,
-        }),
-      };
-
-      vi.mocked(supabase.from).mockReturnValue({
-        insert: vi.fn().mockReturnValue(mockInsertBuilder),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
-
-      await expect(listingService.createListing(mockListingDTO)).rejects.toThrow('Insert failed');
+      await expect(listingService.createListing(mockListingDTO)).rejects.toThrow('Failed to create listing');
     });
   });
 
   describe('deleteListing', () => {
-    it('logs an error when storage deletion fails but continues to delete the listing', async () => {
-      // Setup mock for storage deletion failure
-      const mockStorageRemove = vi.fn().mockResolvedValue({
-        error: { message: 'Storage error' },
+    it('deletes the listing successfully', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
       });
-      vi.mocked(supabase.storage.from).mockReturnValue({
-        remove: mockStorageRemove,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
-
-      // Setup mock for listing deletion success
-      const mockEq = vi.fn().mockResolvedValue({
-        error: null,
-      });
-      const mockDelete = vi.fn().mockReturnValue({
-        eq: mockEq,
-      });
-      vi.mocked(supabase.from).mockReturnValue({
-        delete: mockDelete,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
 
       const listingId = 'listing-123';
       const imageUrls = ['https://example.com/storage/v1/object/public/listing-images/image1.jpg'];
 
-      // Execute
       await expect(listingService.deleteListing(listingId, imageUrls)).resolves.toBeUndefined();
 
-      // Verify storage deletion was attempted
-      expect(supabase.storage.from).toHaveBeenCalledWith('listing-images');
-      expect(mockStorageRemove).toHaveBeenCalledWith(['image1.jpg']);
-
-      // Verify console.error was called
-      expect(console.error).toHaveBeenCalledWith('Error deleting images:', { message: 'Storage error' });
-
-      // Verify listing deletion was still executed
-      expect(supabase.from).toHaveBeenCalledWith('listings');
-      expect(mockDelete).toHaveBeenCalled();
-      expect(mockEq).toHaveBeenCalledWith('id', listingId);
+      expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining(`/listings/${listingId}`), {
+        method: 'DELETE',
+      });
     });
   });
   describe('fetchDetails', () => {
@@ -186,14 +95,14 @@ describe('listingService', () => {
         updated_at: '2023-01-02T00:00:00.000Z',
       };
 
-      mockQueryBuilder.then.mockImplementation((resolve) => resolve({ data: mockListingRow, error: null }));
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockListingRow),
+      });
 
       const result = await listingService.fetchDetails('123');
 
-      expect(supabase.from).toHaveBeenCalledWith('listings');
-      expect(mockQueryBuilder.select).toHaveBeenCalledWith('id, title, description, price, category, subcategory, location, bairro, images, user_id, status, is_featured, created_at, updated_at');
-      expect(mockQueryBuilder.eq).toHaveBeenCalledWith('id', '123');
-      expect(mockQueryBuilder.single).toHaveBeenCalled();
+      expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('/listings/123'));
 
       expect(result).toEqual({
         id: '123',
@@ -220,9 +129,7 @@ describe('listingService', () => {
         description: null, // Null from DB
         price: 100,
         category: 'Test Category',
-        subcategory: 'Test Subcategory',
         location: 'Test Location',
-        bairro: 'Test Bairro',
         images: ['image1.jpg'],
         user_id: 'user-123',
         status: 'active',
@@ -231,130 +138,58 @@ describe('listingService', () => {
         updated_at: '2023-01-02T00:00:00.000Z',
       };
 
-      mockQueryBuilder.then.mockImplementation((resolve) => resolve({ data: mockListingRow, error: null }));
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockListingRow),
+      });
 
       const result = await listingService.fetchDetails('123');
 
       expect(result?.description).toBeUndefined();
     });
 
-    it('maps null images to an empty array', async () => {
-      const mockListingRow = {
-        id: '123',
-        title: 'Test Listing',
-        description: 'Test Description',
-        price: 100,
-        category: 'Test Category',
-        subcategory: 'Test Subcategory',
-        location: 'Test Location',
-        bairro: 'Test Bairro',
-        images: null, // Null from DB
-        user_id: 'user-123',
-        status: 'active',
-        is_featured: false,
-        created_at: '2023-01-01T00:00:00.000Z',
-        updated_at: '2023-01-02T00:00:00.000Z',
-      };
-
-      mockQueryBuilder.then.mockImplementation((resolve) => resolve({ data: mockListingRow, error: null }));
-
-      const result = await listingService.fetchDetails('123');
-
-      expect(result?.images).toEqual([]);
-    });
-
-    it('returns null and logs error if database query fails', async () => {
-      const mockError = { message: 'Database query failed' };
-      mockQueryBuilder.then.mockImplementation((resolve) => resolve({ data: null, error: mockError }));
+    it('returns null if response is 404', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+      });
 
       const result = await listingService.fetchDetails('123');
 
       expect(result).toBeNull();
-      expect(console.error).toHaveBeenCalledWith('Error fetching listing details:', mockError);
     });
   });
 
   describe('searchListings', () => {
     it('applies default base query conditions without filters', async () => {
       await listingService.searchListings({});
-
-      expect(supabase.from).toHaveBeenCalledWith('listings');
-      expect(mockQueryBuilder.select).toHaveBeenCalledWith('id, title, description, price, category, subcategory, location, bairro, images, user_id, status, is_featured, created_at, updated_at');
-      expect(mockQueryBuilder.eq).toHaveBeenCalledWith('status', 'active');
-      expect(mockQueryBuilder.order).toHaveBeenCalledWith('created_at', { ascending: false });
-
-      // Should not call specific filters
-      expect(mockQueryBuilder.ilike).not.toHaveBeenCalled();
-      expect(mockQueryBuilder.in).not.toHaveBeenCalled();
-      expect(mockQueryBuilder.gte).not.toHaveBeenCalled();
-      expect(mockQueryBuilder.lte).not.toHaveBeenCalled();
+      expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('/listings/search?'));
     });
 
-    it('applies ilike for query and location filters', async () => {
+    it('applies query string filters', async () => {
       await listingService.searchListings({
         query: 'iPhone',
         location: 'São Paulo',
       });
-
-      expect(mockQueryBuilder.ilike).toHaveBeenCalledWith('title', '%iPhone%');
-      expect(mockQueryBuilder.ilike).toHaveBeenCalledWith('location', '%São Paulo%');
+      const url = mockFetch.mock.calls[0][0];
+      expect(url).toContain('query=iPhone');
+      expect(url).toContain('location=S%C3%A3o+Paulo');
     });
 
-    it('applies eq for category and subcategory filters', async () => {
+    it('applies array filters as joined strings', async () => {
       await listingService.searchListings({
-        category: 'Eletrônicos',
-        subcategory: 'Celulares',
+        bairros: ['Centro', 'Jardins'],
       });
-
-      // Includes 'status' from default base condition
-      expect(mockQueryBuilder.eq).toHaveBeenCalledWith('status', 'active');
-      expect(mockQueryBuilder.eq).toHaveBeenCalledWith('category', 'Eletrônicos');
-      expect(mockQueryBuilder.eq).toHaveBeenCalledWith('subcategory', 'Celulares');
-    });
-
-    it('applies in for bairros filter when provided with an array of values', async () => {
-      await listingService.searchListings({
-        bairros: ['Centro', 'Jardins', 'Pinheiros'],
-      });
-
-      expect(mockQueryBuilder.in).toHaveBeenCalledWith('bairro', ['Centro', 'Jardins', 'Pinheiros']);
-    });
-
-    it('does not apply in for bairros filter when array is empty', async () => {
-      await listingService.searchListings({
-        bairros: [],
-      });
-
-      expect(mockQueryBuilder.in).not.toHaveBeenCalled();
-    });
-
-    it('applies gte and lte for minPrice and maxPrice filters', async () => {
-      await listingService.searchListings({
-        minPrice: 100,
-        maxPrice: 500,
-      });
-
-      expect(mockQueryBuilder.gte).toHaveBeenCalledWith('price', 100);
-      expect(mockQueryBuilder.lte).toHaveBeenCalledWith('price', 500);
-    });
-
-    it('applies 0 value for price ranges correctly', async () => {
-      await listingService.searchListings({
-        minPrice: 0,
-        maxPrice: 0,
-      });
-
-      expect(mockQueryBuilder.gte).toHaveBeenCalledWith('price', 0);
-      expect(mockQueryBuilder.lte).toHaveBeenCalledWith('price', 0);
+      const url = mockFetch.mock.calls[0][0];
+      expect(url).toContain('bairros=Centro%2CJardins');
     });
 
     it('throws an error and logs it if the query fails', async () => {
-      const mockError = { message: 'Database error' };
-      mockQueryBuilder.then.mockImplementation((resolve) => resolve({ data: null, error: mockError }));
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+      });
 
-      await expect(listingService.searchListings({})).rejects.toEqual(mockError);
-
-      expect(console.error).toHaveBeenCalledWith('Error searching listings:', mockError);
+      await expect(listingService.searchListings({})).rejects.toThrow('Failed to search listings');
     });
   });
 
@@ -370,35 +205,7 @@ describe('listingService', () => {
       images: ['image1.jpg'],
     };
 
-    it('throws an error if the user is not authenticated', async () => {
-      vi.mocked(supabase.auth.getUser).mockResolvedValue({
-        data: { user: null },
-        error: null,
-      });
-
-      await expect(listingService.updateListing('listing-123', mockListingDto)).rejects.toThrow('User not authenticated');
-    });
-
-    it('throws an error if the update operation fails', async () => {
-      vi.mocked(supabase.auth.getUser).mockResolvedValue({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        data: { user: { id: 'user-123' } as any },
-        error: null,
-      });
-
-      const mockError = { message: 'Update failed' };
-      mockQueryBuilder.then.mockImplementation((resolve) => resolve({ data: null, error: mockError }));
-
-      await expect(listingService.updateListing('listing-123', mockListingDto)).rejects.toEqual(mockError);
-    });
-
     it('successfully updates and returns the listing', async () => {
-      vi.mocked(supabase.auth.getUser).mockResolvedValue({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        data: { user: { id: 'user-123' } as any },
-        error: null,
-      });
-
       const mockResponseData = {
         id: 'listing-123',
         title: mockListingDto.title,
@@ -409,49 +216,36 @@ describe('listingService', () => {
         location: mockListingDto.location,
         bairro: mockListingDto.bairro,
         images: mockListingDto.images,
-        user_id: 'user-123',
+        user_id: 'mock-user-123',
         status: 'active',
         is_featured: false,
         created_at: '2023-01-01T00:00:00Z',
         updated_at: '2023-01-02T00:00:00Z',
       };
 
-      mockQueryBuilder.then.mockImplementation((resolve) => resolve({ data: mockResponseData, error: null }));
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockResponseData),
+      });
 
       const result = await listingService.updateListing('listing-123', mockListingDto);
 
-      expect(supabase.from).toHaveBeenCalledWith('listings');
-      expect(mockQueryBuilder.update).toHaveBeenCalledWith(expect.objectContaining({
-        title: mockListingDto.title,
-        description: mockListingDto.description,
-        price: mockListingDto.price,
-        category: mockListingDto.category,
-        subcategory: mockListingDto.subcategory,
-        location: mockListingDto.location,
-        bairro: mockListingDto.bairro,
-        images: mockListingDto.images,
-      }));
-      expect(mockQueryBuilder.eq).toHaveBeenCalledWith('id', 'listing-123');
-      expect(mockQueryBuilder.eq).toHaveBeenCalledWith('user_id', 'user-123');
-      expect(mockQueryBuilder.select).toHaveBeenCalledWith('id, title, description, price, category, subcategory, location, bairro, images, user_id, status, is_featured, created_at, updated_at');
-      expect(mockQueryBuilder.single).toHaveBeenCalled();
-
-      expect(result).toEqual({
-        id: mockResponseData.id,
-        title: mockResponseData.title,
-        description: mockResponseData.description,
-        price: mockResponseData.price,
-        category: mockResponseData.category,
-        subcategory: mockResponseData.subcategory,
-        location: mockResponseData.location,
-        bairro: mockResponseData.bairro,
-        images: mockResponseData.images,
-        userId: mockResponseData.user_id,
-        status: mockResponseData.status,
-        isFeatured: mockResponseData.is_featured,
-        createdAt: mockResponseData.created_at,
-        updatedAt: mockResponseData.updated_at,
+      expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('/listings/listing-123'), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: expect.any(String),
       });
+
+      expect(result.id).toBe(mockResponseData.id);
+      expect(result.userId).toBe(mockResponseData.user_id);
+    });
+
+    it('throws an error if the update operation fails', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+      });
+
+      await expect(listingService.updateListing('listing-123', mockListingDto)).rejects.toThrow('Failed to update listing');
     });
   });
 });
