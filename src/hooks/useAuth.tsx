@@ -1,6 +1,19 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+
+// Define local mock interfaces to replace Supabase types
+export interface User {
+  id: string;
+  email?: string;
+  user_metadata?: {
+    full_name?: string;
+    [key: string]: unknown;
+  };
+}
+
+export interface Session {
+  access_token: string;
+  user: User;
+}
 
 interface AuthContextType {
   user: User | null;
@@ -20,67 +33,66 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    // Mock initializing auth state: No logged-in user initially.
+    const timer = setTimeout(() => {
+      setSession(null);
+      setUser(null);
       setLoading(false);
-    });
+    }, 100);
 
-    return () => subscription.unsubscribe();
+    return () => clearTimeout(timer);
   }, []);
 
   const signUp = async (email: string, password: string, fullName?: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          full_name: fullName || '',
-        },
-      },
-    });
-    
-    // Check if email confirmation is required
-    const needsVerification = !error && data.user && !data.session;
-    
-    return { error: error as Error | null, needsVerification };
+    // Mock successful signup returning no session but requiring verification.
+    console.log("Mock signUp called with", email, password, fullName);
+    return { error: null, needsVerification: true };
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    // Mock successful sign in by manually updating local state.
+    console.log("Mock signIn called with", email, password);
+    const mockUser: User = {
+      id: "mock-user-123",
+      email: email,
+      user_metadata: {
+        full_name: "Mock User",
+      }
+    };
+    const mockSession: Session = {
+      access_token: "mock-token-abc",
+      user: mockUser
+    };
+    setUser(mockUser);
+    setSession(mockSession);
     
-    return { error: error as Error | null };
+    return { error: null };
   };
 
   const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/`,
-      },
-    });
+    // Mock successful google sign in by manually updating local state.
+    console.log("Mock signInWithGoogle called");
+    const mockUser: User = {
+      id: "mock-google-user-456",
+      email: "mock.user@google.com",
+      user_metadata: {
+        full_name: "Mock Google User",
+      }
+    };
+    const mockSession: Session = {
+      access_token: "mock-token-xyz",
+      user: mockUser
+    };
+    setUser(mockUser);
+    setSession(mockSession);
     
-    return { error: error as Error | null };
+    return { error: null };
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    console.log("Mock signOut called");
+    setUser(null);
+    setSession(null);
   };
 
   return (

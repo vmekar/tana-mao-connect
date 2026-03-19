@@ -1,5 +1,3 @@
-import { supabase } from "@/integrations/supabase/client";
-
 export interface Profile {
   id: string;
   full_name: string | null;
@@ -28,115 +26,46 @@ export interface InboxItem {
   }[];
 }
 
-interface MessageRow {
-  id: string;
-  content: string;
-  created_at: string;
-  listing_id: string;
-  sender_id: string;
-  listings: {
-    title: string;
-  } | null;
-  profiles: {
-    full_name: string | null;
-  } | null;
-}
+const MOCK_PROFILE: Profile = {
+  id: "mock-user-123",
+  full_name: "Mock User",
+  phone: "11999999999",
+  avatar_url: null,
+};
+
+const MOCK_INBOX_ITEMS: InboxItem[] = [
+  {
+    listingId: "mock-listing-1",
+    listingTitle: "Mock Apartment",
+    messages: [
+      {
+        id: "msg-1",
+        content: "Hello, is this still available?",
+        senderName: "Mock Buyer 1",
+        createdAt: new Date().toISOString()
+      }
+    ]
+  }
+];
 
 export const messageService = {
   async fetchSellerProfile(userId: string): Promise<Profile | null> {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-
-    if (error) {
-      console.error('Error fetching seller profile:', error);
-      return null;
-    }
-
-    return data as Profile;
+    console.log(`Mock fetchSellerProfile called for ${userId}`);
+    return { ...MOCK_PROFILE, id: userId };
   },
 
   async updateProfile(userId: string, data: Partial<Profile>): Promise<void> {
-    const { error } = await supabase
-      .from('profiles')
-      .update(data)
-      .eq('id', userId);
-
-    if (error) {
-      console.error('Error updating profile:', error);
-      throw error;
-    }
+    console.log(`Mock updateProfile called for ${userId} with`, data);
+    return Promise.resolve();
   },
 
   async sendMessage(listingId: string, receiverId: string, content: string): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) throw new Error('User not authenticated');
-
-    const { error } = await supabase
-      .from('messages')
-      .insert({
-        listing_id: listingId,
-        sender_id: user.id,
-        receiver_id: receiverId,
-        content,
-      });
-
-    if (error) {
-      console.error('Error sending message:', error);
-      throw error;
-    }
+    console.log(`Mock sendMessage called: listing ${listingId}, receiver ${receiverId}, content: ${content}`);
+    return Promise.resolve();
   },
 
   async fetchInbox(userId: string): Promise<InboxItem[]> {
-    // Fetch messages where user is receiver
-    const { data: messages, error } = await supabase
-      .from('messages')
-      .select(`
-        id,
-        content,
-        created_at,
-        listing_id,
-        sender_id,
-        listings:listing_id (
-          title
-        ),
-        profiles:sender_id (
-          full_name
-        )
-      `)
-      .eq('receiver_id', userId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching inbox:', error);
-      throw error;
-    }
-
-    const messageRows = messages as unknown as MessageRow[];
-
-    const grouped = messageRows.reduce((acc: Record<string, InboxItem>, msg) => {
-      const listingId = msg.listing_id;
-      if (!acc[listingId]) {
-        acc[listingId] = {
-          listingId,
-          listingTitle: msg.listings?.title || 'Anúncio indisponível',
-          messages: [],
-        };
-      }
-
-      acc[listingId].messages.push({
-        id: msg.id,
-        content: msg.content,
-        senderName: msg.profiles?.full_name || 'Usuário',
-        createdAt: msg.created_at,
-      });
-
-      return acc;
-    }, {});
-
-    return Object.values(grouped);
+    console.log(`Mock fetchInbox called for ${userId}`);
+    return MOCK_INBOX_ITEMS;
   },
 };
